@@ -1,0 +1,378 @@
+{
+  "serviceCategories": [
+    {
+      "id": "core-services",
+      "label": "🛋️ Core Services",
+      "icon": "🛋️",
+      "services": [
+        {
+          "value": "Tailored Furniture",
+          "label": "Tailored Furniture",
+          "tag": "tailored_furniture",
+          "priority": "high",
+          "estimatedDuration": "2-4 weeks",
+          "priceRange": "medium"
+        },
+        {
+          "value": "Interior Design",
+          "label": "Interior Design",
+          "tag": "interior_design",
+          "priority": "high",
+          "estimatedDuration": "4-8 weeks",
+          "priceRange": "high"
+        },
+        {
+          "value": "Metallic Furniture",
+          "label": "Metallic Furniture",
+          "tag": "metallic_furniture",
+          "priority": "medium",
+          "estimatedDuration": "2-3 weeks",
+          "priceRange": "medium"
+        },
+        {
+          "value": "Upholstery",
+          "label": "Upholstery",
+          "tag": "upholstery",
+          "priority": "medium",
+          "estimatedDuration": "1-2 weeks",
+          "priceRange": "low"
+        }
+      ]
+    },
+    {
+      "id": "design-planning",
+      "label": "🎨 Design & Planning",
+      "icon": "🎨",
+      "services": [
+        {
+          "value": "Space Planning & Layout",
+          "label": "Space Planning & Layout",
+          "tag": "space_planning",
+          "priority": "high",
+          "estimatedDuration": "1-2 weeks",
+          "priceRange": "medium"
+        },
+        {
+          "value": "Vastu-Compliant Design",
+          "label": "Vastu-Compliant Design",
+          "tag": "vastu_design",
+          "priority": "medium",
+          "estimatedDuration": "1-2 weeks",
+          "priceRange": "medium"
+        },
+        {
+          "value": "Lighting Design & Automation",
+          "label": "Lighting Design & Automation",
+          "tag": "lighting_design",
+          "priority": "high",
+          "estimatedDuration": "2-3 weeks",
+          "priceRange": "high"
+        },
+        {
+          "value": "Color Consultation",
+          "label": "Color Consultation",
+          "tag": "color_consultation",
+          "priority": "low",
+          "estimatedDuration": "1 week",
+          "priceRange": "low"
+        },
+        {
+          "value": "3D Visualization & Walkthroughs",
+          "label": "3D Visualization & Walkthroughs",
+          "tag": "3d_visualization",
+          "priority": "high",
+          "estimatedDuration": "1-2 weeks",
+          "priceRange": "medium"
+        }
+      ]
+    },
+    {
+      "id": "execution-build",
+      "label": "🏗️ Execution & Build",
+      "icon": "🏗️",
+      "services": [
+        {
+          "value": "Turnkey Interior Execution",
+          "label": "Turnkey Interior Execution",
+          "tag": "turnkey_execution",
+          "priority": "urgent",
+          "estimatedDuration": "8-12 weeks",
+          "priceRange": "high"
+        },
+        {
+          "value": "Civil & Structural Modifications",
+          "label": "Civil & Structural Modifications",
+          "tag": "civil_modifications",
+          "priority": "high",
+          "estimatedDuration": "4-6 weeks",
+          "priceRange": "high"
+        },
+        {
+          "value": "False Ceiling & POP Work",
+          "label": "False Ceiling & POP Work",
+          "tag": "false_ceiling",
+          "priority": "medium",
+          "estimatedDuration": "2-3 weeks",
+          "priceRange": "medium"
+        },
+        {
+          "value": "Electrical & Plumbing Integration",
+          "label": "Electrical & Plumbing Integration",
+          "tag": "electrical_plumbing",
+          "priority": "high",
+          "estimatedDuration": "2-4 weeks",
+          "priceRange": "medium"
+        },
+        {
+          "value": "Site Supervision & Quality Control",
+          "label": "Site Supervision & Quality Control",
+          "tag": "site_supervision",
+          "priority": "medium",
+          "estimatedDuration": "ongoing",
+          "priceRange": "medium"
+        }
+      ]
+    },
+    {
+      "id": "furniture-fixtures",
+      "label": "🪑 Furniture & Fixtures",
+      "icon": "🪑",
+      "services": [
+        {
+          "value": "Custom Wardrobes",
+          "label": "Custom Wardrobes",
+          "tag": "custom_wardrobes",
+          "priority": "high",
+          "estimatedDuration": "3-4 weeks",
+          "priceRange": "high"
+        },
+        {
+          "value": "Modular Kitchen Installation",
+          "label": "Modular Kitchen Installation",
+          "tag": "modular_kitchen",
+          "priority": "high",
+          "estimatedDuration": "4-6 weeks",
+          "priceRange": "high"
+        },
+        {
+          "value": "Bathroom Vanity Design",
+          "label": "Bathroom Vanity Design",
+          "tag": "bathroom_vanity",
+          "priority": "medium",
+          "estimatedDuration": "2-3 weeks",
+          "priceRange": "medium"
+        },
+        {
+          "value": "Smart Storage Solutions",
+          "label": "Smart Storage Solutions",
+          "tag": "smart_storage",
+          "priority": "medium",
+          "estimatedDuration": "2-3 weeks",
+          "priceRange": "medium"
+        },
+        {
+          "value": "Antique Furniture Restoration",
+          "label": "Antique Furniture Restoration",
+          "tag": "furniture_restoration",
+          "priority": "low",
+          "estimatedDuration": "2-4 weeks",
+          "priceRange": "medium"
+        }
+      ]
+    },
+    {
+      "id": "finishes-styling",
+      "label": "✨ Finishes & Styling",
+      "icon": "✨",
+      "services": [
+        {
+          "value": "Wall Treatments",
+          "label": "Wall Treatments (Wallpaper, Texture, Panels)",
+          "tag": "wall_treatments",
+          "priority": "medium",
+          "estimatedDuration": "1-2 weeks",
+          "priceRange": "medium"
+        },
+        {
+          "value": "Window Treatments",
+          "label": "Window Treatments (Curtains, Blinds)",
+          "tag": "window_treatments",
+          "priority": "low",
+          "estimatedDuration": "1 week",
+          "priceRange": "low"
+        },
+        {
+          "value": "Art & Decor Curation",
+          "label": "Art & Decor Curation",
+          "tag": "art_decor",
+          "priority": "low",
+          "estimatedDuration": "1-2 weeks",
+          "priceRange": "medium"
+        },
+        {
+          "value": "Theme-Based Styling",
+          "label": "Theme-Based Styling (Minimalist, Rustic, Boho)",
+          "tag": "theme_styling",
+          "priority": "medium",
+          "estimatedDuration": "2-3 weeks",
+          "priceRange": "medium"
+        }
+      ]
+    },
+    {
+      "id": "maintenance-post-delivery",
+      "label": "🧼 Maintenance & Post-Delivery",
+      "icon": "🧼",
+      "services": [
+        {
+          "value": "AMC for Interiors",
+          "label": "AMC for Interiors",
+          "tag": "amc_interiors",
+          "priority": "low",
+          "estimatedDuration": "ongoing",
+          "priceRange": "low"
+        },
+        {
+          "value": "Deep Cleaning & Polishing",
+          "label": "Deep Cleaning & Polishing",
+          "tag": "deep_cleaning",
+          "priority": "low",
+          "estimatedDuration": "1-2 days",
+          "priceRange": "low"
+        },
+        {
+          "value": "Furniture Repair & Reupholstery",
+          "label": "Furniture Repair & Reupholstery",
+          "tag": "furniture_repair",
+          "priority": "medium",
+          "estimatedDuration": "1-2 weeks",
+          "priceRange": "low"
+        },
+        {
+          "value": "Seasonal Refresh Packages",
+          "label": "Seasonal Refresh Packages",
+          "tag": "seasonal_refresh",
+          "priority": "low",
+          "estimatedDuration": "1 week",
+          "priceRange": "low"
+        }
+      ]
+    },
+    {
+      "id": "consulting-advisory",
+      "label": "🧠 Consulting & Advisory",
+      "icon": "🧠",
+      "services": [
+        {
+          "value": "Budget Planning & Cost Estimation",
+          "label": "Budget Planning & Cost Estimation",
+          "tag": "budget_planning",
+          "priority": "high",
+          "estimatedDuration": "1 week",
+          "priceRange": "low"
+        },
+        {
+          "value": "Vendor Coordination",
+          "label": "Vendor Coordination",
+          "tag": "vendor_coordination",
+          "priority": "medium",
+          "estimatedDuration": "ongoing",
+          "priceRange": "low"
+        },
+        {
+          "value": "Material Selection Advisory",
+          "label": "Material Selection Advisory",
+          "tag": "material_selection",
+          "priority": "medium",
+          "estimatedDuration": "1 week",
+          "priceRange": "low"
+        },
+        {
+          "value": "Sustainability & Eco-Friendly Design",
+          "label": "Sustainability & Eco-Friendly Design",
+          "tag": "sustainability_design",
+          "priority": "medium",
+          "estimatedDuration": "1-2 weeks",
+          "priceRange": "medium"
+        }
+      ]
+    },
+    {
+      "id": "sector-based",
+      "label": "🏢 Sector-Based Services",
+      "icon": "🏢",
+      "services": [
+        {
+          "value": "Retail Interiors",
+          "label": "Retail Interiors",
+          "tag": "retail_interiors",
+          "priority": "high",
+          "estimatedDuration": "6-10 weeks",
+          "priceRange": "high"
+        },
+        {
+          "value": "Commercial Spaces",
+          "label": "Commercial Spaces",
+          "tag": "commercial_spaces",
+          "priority": "high",
+          "estimatedDuration": "8-12 weeks",
+          "priceRange": "high"
+        },
+        {
+          "value": "Hospital & Healthcare Design",
+          "label": "Hospital & Healthcare Design",
+          "tag": "hospital_design",
+          "priority": "urgent",
+          "estimatedDuration": "10-16 weeks",
+          "priceRange": "high"
+        },
+        {
+          "value": "Textile Showroom Design",
+          "label": "Textile Showroom Design",
+          "tag": "textile_showroom",
+          "priority": "high",
+          "estimatedDuration": "6-8 weeks",
+          "priceRange": "high"
+        },
+        {
+          "value": "Toy Store Interiors",
+          "label": "Toy Store Interiors",
+          "tag": "toystore_design",
+          "priority": "medium",
+          "estimatedDuration": "4-6 weeks",
+          "priceRange": "medium"
+        },
+        {
+          "value": "Jewelry Store Interiors",
+          "label": "Jewelry Store Interiors",
+          "tag": "jewelry_store",
+          "priority": "high",
+          "estimatedDuration": "6-8 weeks",
+          "priceRange": "high"
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "version": "1.1.0",
+    "lastUpdated": "2025-11-01",
+    "totalServices": 38,
+    "totalCategories": 8
+  },
+  "analytics": {
+    "conversionTracking": true,
+    "leadSegmentation": true,
+    "serviceTagging": true,
+    "priorityMapping": {
+      "urgent": 4,
+      "high": 3,
+      "medium": 2,
+      "low": 1
+    },
+    "priceRangeMapping": {
+      "low": "₹10,000 - ₹50,000",
+      "medium": "₹50,000 - ₹2,00,000",
+      "high": "₹2,00,000+"
+    }
+  }
+}

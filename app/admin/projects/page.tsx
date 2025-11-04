@@ -20,6 +20,9 @@ interface Project {
   }
 }
 
+import AuthGuard from '@/components/AuthGuard'
+
+
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
@@ -140,6 +143,7 @@ export default function ProjectsPage() {
   }, [])
 
   return (
+    <AuthGuard requiredRole="admin">
     <div className="p-8">
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
@@ -303,6 +307,7 @@ export default function ProjectsPage() {
                   }
                   
                   return (
+    <AuthGuard requiredRole="admin">
                     <button
                       key={pageNum}
                       onClick={() => setCurrentPage(pageNum)}
@@ -314,6 +319,7 @@ export default function ProjectsPage() {
                     >
                       {pageNum}
                     </button>
+    </AuthGuard>
                   )
                 })}
               </div>
@@ -354,5 +360,6 @@ export default function ProjectsPage() {
           </div>
         )}
     </div>
+    </AuthGuard>
   )
 }

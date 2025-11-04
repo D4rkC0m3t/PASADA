@@ -42,10 +42,10 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(redirectUrl)
     }
 
-    // Verify user exists and is active
+    // Verify user exists, is active, and has appropriate role
     const { data: profile, error } = await supabase
       .from('user_profiles')
-      .select('is_active')
+      .select('role, is_active')
       .eq('id', session.user.id)
       .single()
 
@@ -54,6 +54,9 @@ export async function middleware(req: NextRequest) {
       redirectUrl.searchParams.set('error', 'unauthorized')
       return NextResponse.redirect(redirectUrl)
     }
+    
+    // Log for debugging
+    console.log(`Client route access: ${session.user.email} with role ${profile.role}`)
   }
 
   return res

@@ -4,8 +4,12 @@ import { MotionWrapper } from '@/app/components/MotionWrapper'
 import { VisitorAnalytics } from '@/app/components/VisitorAnalytics'
 import { LeadsTable } from '@/app/components/LeadsTable'
 
+import AuthGuard from '@/components/AuthGuard'
+
+
 export default function AnalyticsPage() {
   return (
+    <AuthGuard requiredRole="admin">
     <div className="p-8 space-y-8">
       {/* Header */}
       <MotionWrapper delay={0}>
@@ -23,5 +27,6 @@ export default function AnalyticsPage() {
       {/* Leads Table */}
       <LeadsTable />
     </div>
+    </AuthGuard>
   )
 }

@@ -25,6 +25,9 @@ interface Quotation {
   }
 }
 
+import AuthGuard from '@/components/AuthGuard'
+
+
 export default function QuotationsPage() {
   const [quotations, setQuotations] = useState<Quotation[]>([])
   const [loading, setLoading] = useState(true)
@@ -92,27 +95,30 @@ export default function QuotationsPage() {
     return afterDiscount + tax
   }
 
-  const handleDownloadPDF = async (quotationId: string, quotationNumber: string) => {
+  const handleDownloadPDF = async (quotationId: string, quotationNumber: string, gstVersion: boolean = false) => {
     setDownloadingId(quotationId)
     try {
-      const response = await fetch(`/api/quotations/${quotationId}/pdf`)
+      const endpoint = gstVersion ? `/api/quotations/${quotationId}/pdf-gst` : `/api/quotations/${quotationId}/pdf`
+      const response = await fetch(endpoint)
       
       if (!response.ok) {
-        throw new Error('Failed to generate PDF')
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to generate PDF')
       }
 
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
-      link.download = `Quotation-${quotationNumber}.pdf`
+      const prefix = gstVersion ? 'GST-Quotation' : 'Quotation'
+      link.download = `${prefix}-${quotationNumber}.pdf`
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
     } catch (error) {
       console.error('Error downloading PDF:', error)
-      alert('Failed to download PDF. Please try again.')
+      alert(`Failed to download PDF: ${error instanceof Error ? error.message : 'Please try again.'}`)
     } finally {
       setDownloadingId(null)
     }
@@ -156,6 +162,7 @@ export default function QuotationsPage() {
   }
 
   return (
+    <AuthGuard requiredRole="admin">
     <div className="p-8">
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
@@ -408,5 +415,6 @@ export default function QuotationsPage() {
           </div>
         )}
     </div>
+    </AuthGuard>
   )
 }

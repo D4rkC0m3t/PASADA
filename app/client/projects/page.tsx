@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Home, FolderOpen, FileText, Calendar, MessageSquare, LogOut, ArrowLeft, Eye } from 'lucide-react'
+import { Eye, ArrowLeft, FolderOpen } from 'lucide-react'
 import { createBrowserClient } from '@/lib/supabase/client'
+import { ClientLayout } from '@/app/components/ClientLayout'
 
 interface Project {
   id: string
@@ -24,6 +25,7 @@ interface Project {
 export default function ClientProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
+  // We'll use this state if we need to display client name in the future
   const [clientName, setClientName] = useState('')
   const supabase = createBrowserClient()
 
@@ -43,7 +45,7 @@ export default function ClientProjectsPage() {
       }
 
       // Get user profile to find client_id
-      const { data: profile, error: profileError } = await supabase
+      const { error: profileError } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('id', user.id)
@@ -65,6 +67,8 @@ export default function ClientProjectsPage() {
         return
       }
 
+      // Store client name if needed for UI
+      // Currently not used but keeping for future features
       setClientName(clientData.name)
 
       // Fetch projects for this client
@@ -124,61 +128,20 @@ export default function ClientProjectsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950">
-      {/* Sidebar */}
-      <aside className="fixed left-0 top-0 h-full w-64 bg-zinc-900 border-r border-zinc-800 p-6">
-        <div className="flex items-center space-x-3 mb-8">
-          <div className="w-10 h-10 bg-gradient-to-br from-yellow-600 to-yellow-700 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-xl">P</span>
-          </div>
-          <span className="text-xl font-bold text-white">PASADA</span>
-        </div>
-
-        <nav className="space-y-2">
-          <Link href="/client/dashboard" className="flex items-center space-x-3 px-4 py-3 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all">
-            <Home className="w-5 h-5" />
-            <span>Dashboard</span>
-          </Link>
-          <Link href="/client/projects" className="flex items-center space-x-3 px-4 py-3 bg-yellow-600/10 text-yellow-600 rounded-lg">
-            <FolderOpen className="w-5 h-5" />
-            <span>My Projects</span>
-          </Link>
-          <Link href="/client/quotations" className="flex items-center space-x-3 px-4 py-3 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all">
-            <FileText className="w-5 h-5" />
-            <span>Quotations</span>
-          </Link>
-          <Link href="/client/bookings" className="flex items-center space-x-3 px-4 py-3 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all">
-            <Calendar className="w-5 h-5" />
-            <span>Bookings</span>
-          </Link>
-          <Link href="/client/messages" className="flex items-center space-x-3 px-4 py-3 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all">
-            <MessageSquare className="w-5 h-5" />
-            <span>Messages</span>
-          </Link>
-        </nav>
-
-        <div className="absolute bottom-6 left-6 right-6">
-          <Link href="/login" className="flex items-center space-x-3 px-4 py-3 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all">
-            <LogOut className="w-5 h-5" />
-            <span>Logout</span>
-          </Link>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="ml-64 p-8">
-        {/* Header */}
-        <div className="mb-8">
-          <Link
-            href="/client/dashboard"
-            className="inline-flex items-center text-zinc-400 hover:text-white mb-4 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
-          </Link>
-          <h1 className="text-3xl font-bold text-white mb-2">My Projects</h1>
-          <p className="text-zinc-400">View and track your interior design projects</p>
-        </div>
+    <ClientLayout 
+      title="My Projects" 
+      subtitle="View and track your interior design projects"
+    >
+      {/* Back Button */}
+      <div className="mb-6">
+        <Link
+          href="/client/dashboard"
+          className="inline-flex items-center text-blue-400 hover:text-blue-300 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Dashboard
+        </Link>
+      </div>
 
         {/* Projects List */}
         {loading ? (
@@ -187,7 +150,7 @@ export default function ClientProjectsPage() {
             <p className="text-zinc-400">Loading your projects...</p>
           </div>
         ) : projects.length === 0 ? (
-          <div className="text-center py-12 bg-zinc-900 border border-zinc-800 rounded-xl">
+          <div className="text-center py-12 glassmorphic-card">
             <FolderOpen className="w-16 h-16 text-zinc-700 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-white mb-2">No Projects Yet</h3>
             <p className="text-zinc-400 mb-6">You don't have any projects assigned yet.</p>
@@ -201,7 +164,7 @@ export default function ClientProjectsPage() {
         ) : (
           <div className="space-y-6">
             {projects.map((project) => (
-              <div key={project.id} className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-zinc-700 transition-all">
+              <div key={project.id} className="glassmorphic-card p-6 hover:border-blue-500/30 transition-all">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
@@ -242,7 +205,7 @@ export default function ClientProjectsPage() {
                   </div>
                   <Link
                     href={`/client/projects/${project.id}`}
-                    className="flex items-center space-x-2 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-all ml-4"
+                    className="glass-button flex items-center space-x-2 px-4 py-2 ml-4"
                   >
                     <Eye className="w-4 h-4" />
                     <span>View Details</span>
@@ -251,16 +214,16 @@ export default function ClientProjectsPage() {
 
                 {/* Timeline */}
                 <div className="grid md:grid-cols-3 gap-4 mb-4">
-                  <div className="bg-zinc-800 rounded-lg p-4">
+                  <div className="glass-card p-4">
                     <div className="text-zinc-400 text-xs mb-1">Start Date</div>
                     <div className="text-white font-medium">{formatDate(project.start_date)}</div>
                   </div>
-                  <div className="bg-zinc-800 rounded-lg p-4">
+                  <div className="glass-card p-4">
                     <div className="text-zinc-400 text-xs mb-1">Expected End</div>
                     <div className="text-white font-medium">{formatDate(project.end_date)}</div>
                   </div>
                   {project.completion_date && (
-                    <div className="bg-zinc-800 rounded-lg p-4">
+                    <div className="glass-card p-4">
                       <div className="text-zinc-400 text-xs mb-1">Completed On</div>
                       <div className="text-green-400 font-medium">{formatDate(project.completion_date)}</div>
                     </div>
@@ -273,7 +236,7 @@ export default function ClientProjectsPage() {
                     <span className="text-zinc-400">Progress</span>
                     <span className="text-white font-medium">{calculateProgress(project)}%</span>
                   </div>
-                  <div className="w-full bg-zinc-800 rounded-full h-3">
+                  <div className="w-full bg-pasada-900/50 rounded-full h-3">
                     <div 
                       className={`h-3 rounded-full transition-all ${
                         project.status === 'completed' ? 'bg-green-600' :
@@ -288,7 +251,7 @@ export default function ClientProjectsPage() {
 
                 {/* Budget Tracking */}
                 {project.budget && (
-                  <div className="mt-4 pt-4 border-t border-zinc-800">
+                  <div className="mt-4 pt-4 glass-divider">
                     <div className="flex justify-between items-center">
                       <div>
                         <span className="text-zinc-400 text-sm">Budget Allocated</span>
@@ -315,31 +278,30 @@ export default function ClientProjectsPage() {
         {/* Summary Stats */}
         {!loading && projects.length > 0 && (
           <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+            <div className="glass-card p-4 hover:shadow-lg transition-all">
               <div className="text-2xl font-bold text-white">{projects.length}</div>
-              <div className="text-sm text-zinc-400">Total Projects</div>
+              <div className="text-sm text-blue-300">Total Projects</div>
             </div>
-            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-              <div className="text-2xl font-bold text-cyan-600">
+            <div className="glass-card p-4 hover:shadow-lg transition-all">
+              <div className="text-2xl font-bold text-blue-400">
                 {projects.filter(p => p.status === 'in_progress').length}
               </div>
-              <div className="text-sm text-zinc-400">In Progress</div>
+              <div className="text-sm text-blue-300">In Progress</div>
             </div>
-            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-              <div className="text-2xl font-bold text-green-600">
+            <div className="glass-card p-4 hover:shadow-lg transition-all">
+              <div className="text-2xl font-bold text-green-400">
                 {projects.filter(p => p.status === 'completed').length}
               </div>
-              <div className="text-sm text-zinc-400">Completed</div>
+              <div className="text-sm text-blue-300">Completed</div>
             </div>
-            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-              <div className="text-2xl font-bold text-yellow-600">
+            <div className="glass-card p-4 hover:shadow-lg transition-all">
+              <div className="text-2xl font-bold text-blue-400">
                 {projects.filter(p => ['planning', 'design', 'quotation'].includes(p.status)).length}
               </div>
-              <div className="text-sm text-zinc-400">Planning</div>
+              <div className="text-sm text-blue-300">Planning</div>
             </div>
           </div>
         )}
-      </main>
-    </div>
+    </ClientLayout>
   )
 }

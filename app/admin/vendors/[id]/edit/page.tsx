@@ -381,7 +381,7 @@ export default function EditVendorPage() {
             <button
               type="submit"
               disabled={saving}
-              className="flex items-center space-x-2 bg-gradient-to-r from-yellow-600 to-yellow-700 text-white px-6 py-3 rounded-lg hover:from-yellow-700 hover:to-yellow-800 transition-all shadow-lg shadow-yellow-900/30 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="glass-button flex items-center space-x-2 px-6 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Save className="w-5 h-5" />
               <span>{saving ? 'Saving...' : 'Save Changes'}</span>

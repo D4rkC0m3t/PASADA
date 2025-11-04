@@ -68,7 +68,7 @@ export default function Footer() {
             <ul className="space-y-3">
               <li className="flex items-start space-x-2 text-sm text-zinc-400">
                 <Phone className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                <span>+1 (555) 123-4567</span>
+                <span>7090004948</span>
               </li>
               <li className="flex items-start space-x-2 text-sm text-zinc-400">
                 <Mail className="w-4 h-4 mt-0.5 flex-shrink-0" />
@@ -76,7 +76,7 @@ export default function Footer() {
               </li>
               <li className="flex items-start space-x-2 text-sm text-zinc-400">
                 <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                <span>123 Design Street, Creative City</span>
+                <span>No 47 LBS Nagar 1st Cross K Narayanapura Bangalore 560077</span>
               </li>
             </ul>
           </div>
@@ -88,6 +88,9 @@ export default function Footer() {
             © {new Date().getFullYear()} PASADA Interior Design. All rights reserved.
           </p>
           <div className="flex items-center space-x-6 mt-4 md:mt-0">
+            <p className="text-zinc-400 text-sm">
+              Crafted By <span className="text-white">Arjun@Neo</span> @ <span className="text-white">Pasada</span>
+            </p>
             <Link href="/privacy" className="text-zinc-400 hover:text-white text-sm transition-colors">
               Privacy Policy
             </Link>

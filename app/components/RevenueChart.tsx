@@ -16,42 +16,60 @@ const sampleData: DataPoint[] = [
 export const RevenueChart = ({ data = sampleData }: { data?: DataPoint[] }) => {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
-      className="bg-[#151515] rounded-2xl p-4 border border-[#2a2a2a] h-64"
+      transition={{ duration: 0.6, type: "spring" }}
+      className="glassmorphic-card p-6 h-80 flex flex-col"
     >
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-semibold">Revenue Trend</h3>
-        <span className="text-xs text-gray-400">Last 6 months</span>
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h3 className="card-title">Revenue Trend</h3>
+          <p className="body-text text-xs mt-1">Last 6 months performance</p>
+        </div>
+        <span className="glass-badge" style={{ color: '#D4AF37', borderColor: 'rgba(212, 175, 55, 0.3)' }}>
+          ↗ Growing
+        </span>
       </div>
 
-      <div className="w-full h-44">
+      <div className="w-full flex-1 min-h-0">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 0, right: 0, left: -10, bottom: 0 }}>
+          <AreaChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
             <defs>
-              <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#f6d365" stopOpacity={0.9} />
-                <stop offset="100%" stopColor="#f6d365" stopOpacity={0.05} />
+              <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#D4AF37" stopOpacity={0.4} />
+                <stop offset="100%" stopColor="#b8941f" stopOpacity={0.05} />
               </linearGradient>
             </defs>
-            <CartesianGrid stroke="#222" strokeDasharray="3 3" />
-            <XAxis dataKey="date" tick={{ fill: "#aaa", fontSize: 12 }} />
-            <YAxis tickFormatter={(v) => `${v}L`} tick={{ fill: "#aaa", fontSize: 12 }} />
+            <CartesianGrid stroke="#2a2a2a" strokeDasharray="3 3" opacity={0.3} />
+            <XAxis 
+              dataKey="date" 
+              tick={{ fill: "#b3b3b3", fontSize: 12 }} 
+              axisLine={{ stroke: "#2a2a2a" }}
+            />
+            <YAxis 
+              tickFormatter={(v) => `₹${v}L`} 
+              tick={{ fill: "#b3b3b3", fontSize: 12 }}
+              axisLine={{ stroke: "#2a2a2a" }}
+            />
             <Tooltip 
               contentStyle={{ 
-                background: "#181818", 
-                border: "1px solid #2a2a2a",
-                borderRadius: "8px"
-              }} 
+                background: "rgba(15, 15, 15, 0.95)", 
+                border: "1px solid rgba(245, 197, 66, 0.3)",
+                borderRadius: "10px",
+                backdropFilter: "blur(10px)",
+                color: "#f5c542",
+                fontWeight: "600"
+              }}
+              labelStyle={{ color: "#fff8f1" }}
             />
             <Area 
               type="monotone" 
               dataKey="revenue" 
-              stroke="#f6d365" 
-              fill="url(#grad)" 
-              strokeWidth={2} 
-              animationDuration={1200} 
+              stroke="#D4AF37" 
+              fill="url(#revenueGradient)" 
+              strokeWidth={3} 
+              animationDuration={1500}
+              animationEasing="ease-in-out"
             />
           </AreaChart>
         </ResponsiveContainer>

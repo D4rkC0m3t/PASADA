@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft, Save, User, Building2, Mail, Phone, MapPin, Globe, FileText, Bell, Lock, Palette, Database } from 'lucide-react'
 import { createBrowserClient } from '@/lib/supabase/client'
 
+import AuthGuard from '@/components/AuthGuard'
+
+
 export default function SettingsPage() {
   const router = useRouter()
   const supabase = createBrowserClient()
@@ -106,6 +109,7 @@ export default function SettingsPage() {
   ]
 
   return (
+    <AuthGuard requiredRole="admin">
     <div className="p-8">
       {/* Header */}
       <div className="mb-8">
@@ -124,7 +128,7 @@ export default function SettingsPage() {
           <button
             onClick={handleSave}
             disabled={loading}
-            className="flex items-center space-x-2 px-6 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-all disabled:opacity-50"
+            className="glass-button flex items-center space-x-2 px-6 py-3 disabled:opacity-50"
           >
             <Save className="w-5 h-5" />
             <span>{loading ? 'Saving...' : 'Save Changes'}</span>
@@ -142,6 +146,7 @@ export default function SettingsPage() {
         {tabs.map(tab => {
           const Icon = tab.icon
           return (
+    <AuthGuard requiredRole="admin">
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
@@ -154,6 +159,7 @@ export default function SettingsPage() {
               <Icon className="w-5 h-5" />
               <span className="font-medium">{tab.label}</span>
             </button>
+    </AuthGuard>
           )
         })}
       </div>

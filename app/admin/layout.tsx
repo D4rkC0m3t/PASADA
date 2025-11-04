@@ -2,8 +2,10 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Home, Users, FolderKanban, FileText, Package, Calendar, Settings, LogOut, Bell, BarChart3 } from 'lucide-react'
+import { Home, Users, FolderKanban, FileText, Package, Calendar, Settings, LogOut, Bell, BarChart3, Calculator, Receipt, ChevronLeft, Menu, X, Truck } from 'lucide-react'
 import { createBrowserClient } from '@/lib/supabase/client'
+import { useState } from 'react'
+import '@/app/styles/dashboard-theme.css'
 
 export default function AdminLayout({
   children,
@@ -13,6 +15,8 @@ export default function AdminLayout({
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createBrowserClient()
+  const [collapsed, setCollapsed] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -25,8 +29,11 @@ export default function AdminLayout({
     { name: 'Analytics & Leads', href: '/admin/analytics', icon: BarChart3 },
     { name: 'Clients', href: '/admin/clients', icon: Users },
     { name: 'Projects', href: '/admin/projects', icon: FolderKanban },
+    { name: 'Estimations', href: '/admin/estimations', icon: Calculator },
     { name: 'Quotations', href: '/admin/quotations', icon: FileText },
+    { name: 'E-Invoice', href: '/admin/invoices', icon: Receipt },
     { name: 'Materials', href: '/admin/materials', icon: Package },
+    { name: 'Vendors', href: '/admin/vendors', icon: Truck },
     { name: 'Bookings', href: '/admin/bookings', icon: Calendar },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
   ]
@@ -39,21 +46,43 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a]">
-      {/* Sidebar */}
-      <aside className="fixed left-0 top-0 h-full w-64 bg-pasada-950 border-r border-pasada-900 flex flex-col">
+    <div className="min-h-screen dashboard-dark">
+      {/* Mobile Overlay */}
+      <div 
+        className={`sidebar-overlay ${mobileOpen ? 'active' : ''}`}
+        onClick={() => setMobileOpen(false)}
+      />
+
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => setMobileOpen(!mobileOpen)}
+        className="lg:hidden fixed top-4 left-4 z-[1001] p-2 bg-[#2a2e30] border border-[rgba(255,255,255,0.08)] rounded-lg text-white hover:bg-[#2f3335] transition-all"
+      >
+        {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+      </button>
+
+      {/* Premium Glassmorphic Sidebar */}
+      <aside className={`premium-sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
+        {/* Toggle Button */}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="sidebar-toggle hidden lg:flex"
+        >
+          <ChevronLeft className={`transition-transform ${collapsed ? 'rotate-180' : ''}`} />
+        </button>
+
         {/* Logo */}
-        <div className="p-6 border-b border-pasada-900">
-          <Link href="/admin/dashboard" className="flex flex-col items-center justify-center">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-gold-400 tracking-wider">PASADA</div>
-              <div className="text-sm font-medium text-gold-500/70 tracking-widest">GROUPS</div>
+        <div className="sidebar-logo">
+          <Link href="/admin/dashboard">
+            <div className="sidebar-logo-text">
+              <div className="sidebar-logo-main">PASADA</div>
+              <div className="sidebar-logo-sub">GROUPS</div>
             </div>
           </Link>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+        <nav className="sidebar-nav">
           {navigation.map((item) => {
             const Icon = item.icon
             const active = isActive(item.href)
@@ -61,38 +90,35 @@ export default function AdminLayout({
               <Link
                 key={item.name}
                 href={item.href}
-                className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all ${
-                  active
-                    ? 'bg-gold-500/10 text-gold-400 border-l-2 border-gold-400'
-                    : 'text-pasada-300 hover:text-[#fff8f1] hover:bg-pasada-900/50'
-                }`}
+                onClick={() => setMobileOpen(false)}
+                className={`sidebar-nav-item ${active ? 'active' : ''}`}
               >
-                <Icon className="w-5 h-5" />
-                <span className="font-medium">{item.name}</span>
+                <Icon className="sidebar-nav-icon" />
+                <span>{item.name}</span>
               </Link>
             )
           })}
         </nav>
 
         {/* Bottom Actions */}
-        <div className="p-4 border-t border-pasada-900 space-y-2">
-          <button className="flex items-center space-x-3 px-4 py-3 text-pasada-300 hover:text-[#fff8f1] hover:bg-pasada-900/50 rounded-lg transition-all w-full">
-            <Bell className="w-5 h-5" />
-            <span className="font-medium">Notifications</span>
-            <span className="ml-auto bg-gold-500 text-pasada-950 text-xs font-semibold rounded-full px-2 py-0.5">3</span>
+        <div className="sidebar-footer">
+          <button className="sidebar-footer-btn">
+            <Bell className="sidebar-nav-icon" />
+            <span>Notifications</span>
+            <span className="sidebar-nav-badge">3</span>
           </button>
           <button
             onClick={handleLogout}
-            className="flex items-center space-x-3 px-4 py-3 text-pasada-300 hover:text-red-400 hover:bg-red-900/20 rounded-lg transition-all w-full"
+            className="sidebar-footer-btn logout"
           >
-            <LogOut className="w-5 h-5" />
-            <span className="font-medium">Logout</span>
+            <LogOut className="sidebar-nav-icon" />
+            <span>Logout</span>
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="ml-64">
+      <main className={`transition-all duration-300 ${collapsed ? 'lg:ml-[80px]' : 'lg:ml-[280px]'} ml-0`}>
         {children}
       </main>
     </div>

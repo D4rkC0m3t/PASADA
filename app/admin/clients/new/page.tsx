@@ -3,13 +3,17 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Save, User, Mail, Phone, MapPin, Building } from 'lucide-react'
+import { ArrowLeft, Save, User, Mail, Phone, MapPin, Building, CheckCircle, AlertCircle } from 'lucide-react'
 import { createBrowserClient } from '@/lib/supabase/client'
+import { validateGSTIN, getStateFromGSTIN } from '@/lib/gst/validation'
+import AuthGuard from '@/components/AuthGuard'
+
 
 export default function NewClientPage() {
   const router = useRouter()
   const supabase = createBrowserClient()
   const [loading, setLoading] = useState(false)
+  const [gstinValidation, setGstinValidation] = useState<{ isValid: boolean; message: string } | null>(null)
   const [formData, setFormData] = useState({
     name: '',
     contact_name: '',
@@ -18,7 +22,11 @@ export default function NewClientPage() {
     address: '',
     city: '',
     state: '',
-    pincode: '',
+    zip_code: '',
+    gstin: '',
+    state_code: '',
+    pan: '',
+    client_type: 'B2C' as 'B2B' | 'B2C',
     type: 'residential' as 'residential' | 'commercial',
     notes: ''
   })
@@ -26,25 +34,29 @@ export default function NewClientPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!formData.name) {
-      alert('Please enter client name')
+    if (!formData.name || !formData.contact_name) {
+      alert('Please enter client name and contact person name')
       return
     }
 
     try {
       setLoading(true)
       
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('clients')
         .insert([{
           name: formData.name,
-          contact_name: formData.contact_name || null,
+          contact_name: formData.contact_name,
           email: formData.email || null,
           phone: formData.phone || null,
           address: formData.address || null,
           city: formData.city || null,
           state: formData.state || null,
-          pincode: formData.pincode || null,
+          zip_code: formData.zip_code || null,
+          gstin: formData.gstin || null,
+          state_code: formData.state_code || null,
+          pan: formData.pan || null,
+          client_type: formData.client_type,
           type: formData.type,
           notes: formData.notes || null
         }])
@@ -63,13 +75,41 @@ export default function NewClientPage() {
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: value
     })
+
+    // Auto-validate GSTIN and extract details
+    if (name === 'gstin' && value) {
+      const validation = validateGSTIN(value)
+      
+      if (validation.isValid) {
+        setGstinValidation({ isValid: true, message: 'Valid GSTIN' })
+        
+        // Auto-extract state code and PAN
+        if (validation.stateCode) {
+          const stateName = getStateFromGSTIN(value)
+          setFormData(prev => ({
+            ...prev,
+            state_code: validation.stateCode!,
+            state: stateName || '',
+            pan: validation.pan || '',
+            client_type: 'B2B' // If GSTIN provided, it's B2B
+          }))
+        }
+      } else {
+        setGstinValidation({ isValid: false, message: validation.error || 'Invalid GSTIN' })
+      }
+    } else if (name === 'gstin' && !value) {
+      setGstinValidation(null)
+    }
   }
 
   return (
+    <AuthGuard requiredRole="admin">
     <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950">
       {/* Header */}
       <div className="bg-zinc-900 border-b border-zinc-800 px-8 py-6">
@@ -116,13 +156,14 @@ export default function NewClientPage() {
               {/* Contact Person */}
               <div>
                 <label className="block text-sm font-medium text-zinc-300 mb-2">
-                  Contact Person
+                  Contact Person <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   name="contact_name"
                   value={formData.contact_name}
                   onChange={handleChange}
+                  required
                   className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-yellow-600 transition-colors"
                   placeholder="John Doe"
                 />
@@ -143,6 +184,111 @@ export default function NewClientPage() {
                   <option value="residential">Residential</option>
                   <option value="commercial">Commercial</option>
                 </select>
+              </div>
+            </div>
+          </div>
+
+          {/* GST Information */}
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 mb-6">
+            <h2 className="text-xl font-semibold text-white mb-6 flex items-center">
+              <Building className="w-5 h-5 mr-2 text-yellow-600" />
+              GST Information (Optional - For B2B Clients)
+            </h2>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* GSTIN */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-zinc-300 mb-2">
+                  GSTIN (GST Identification Number)
+                </label>
+                <input
+                  type="text"
+                  name="gstin"
+                  value={formData.gstin}
+                  onChange={handleChange}
+                  maxLength={15}
+                  className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-yellow-600 transition-colors uppercase"
+                  placeholder="29ABCDE1234F1Z5"
+                />
+                {gstinValidation && (
+                  <div className={`mt-2 flex items-center space-x-2 text-sm ${
+                    gstinValidation.isValid ? 'text-emerald-400' : 'text-red-400'
+                  }`}>
+                    {gstinValidation.isValid ? (
+                      <CheckCircle className="w-4 h-4" />
+                    ) : (
+                      <AlertCircle className="w-4 h-4" />
+                    )}
+                    <span>{gstinValidation.message}</span>
+                  </div>
+                )}
+                <p className="mt-1 text-xs text-zinc-500">
+                  Enter GSTIN to auto-fill state and PAN. Leave empty for B2C clients.
+                </p>
+              </div>
+
+              {/* State Code (Auto-filled) */}
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-2">
+                  State Code
+                </label>
+                <input
+                  type="text"
+                  name="state_code"
+                  value={formData.state_code}
+                  readOnly
+                  className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-500 cursor-not-allowed"
+                  placeholder="Auto-filled from GSTIN"
+                />
+              </div>
+
+              {/* PAN (Auto-filled) */}
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-2">
+                  PAN
+                </label>
+                <input
+                  type="text"
+                  name="pan"
+                  value={formData.pan}
+                  readOnly
+                  className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-500 cursor-not-allowed uppercase"
+                  placeholder="Auto-filled from GSTIN"
+                />
+              </div>
+
+              {/* Client Type (B2B/B2C) */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-zinc-300 mb-2">
+                  Business Type
+                </label>
+                <div className="flex items-center space-x-6">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="client_type"
+                      value="B2B"
+                      checked={formData.client_type === 'B2B'}
+                      onChange={handleChange}
+                      className="w-4 h-4 text-yellow-600 focus:ring-yellow-600 focus:ring-offset-zinc-900"
+                    />
+                    <span className="text-zinc-300">B2B (Business to Business)</span>
+                  </label>
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="client_type"
+                      value="B2C"
+                      checked={formData.client_type === 'B2C'}
+                      onChange={handleChange}
+                      className="w-4 h-4 text-yellow-600 focus:ring-yellow-600 focus:ring-offset-zinc-900"
+                    />
+                    <span className="text-zinc-300">B2C (Business to Consumer)</span>
+                  </label>
+                </div>
+                <p className="mt-1 text-xs text-zinc-500">
+                  B2B clients require GSTIN for GST invoicing
+                </p>
               </div>
             </div>
           </div>
@@ -246,15 +392,15 @@ export default function NewClientPage() {
                 />
               </div>
 
-              {/* Pincode */}
+              {/* Zip Code */}
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-zinc-300 mb-2">
-                  Pincode
+                  Zip Code / Pincode
                 </label>
                 <input
                   type="text"
-                  name="pincode"
-                  value={formData.pincode}
+                  name="zip_code"
+                  value={formData.zip_code}
                   onChange={handleChange}
                   className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-yellow-600 transition-colors"
                   placeholder="400001"
@@ -305,5 +451,6 @@ export default function NewClientPage() {
         </form>
       </div>
     </div>
+    </AuthGuard>
   )
 }

@@ -6,6 +6,9 @@ import Link from 'next/link'
 import { ArrowLeft, Save, Package, DollarSign, Tag, User, Image as ImageIcon } from 'lucide-react'
 import { createBrowserClient } from '@/lib/supabase/client'
 
+import AuthGuard from '@/components/AuthGuard'
+
+
 export default function NewMaterialPage() {
   const router = useRouter()
   const supabase = createBrowserClient()
@@ -71,6 +74,7 @@ export default function NewMaterialPage() {
   }
 
   return (
+    <AuthGuard requiredRole="admin">
     <div className="p-8">
       {/* Header */}
       <div className="mb-8">
@@ -340,5 +344,6 @@ export default function NewMaterialPage() {
         </div>
       </form>
     </div>
+    </AuthGuard>
   )
 }

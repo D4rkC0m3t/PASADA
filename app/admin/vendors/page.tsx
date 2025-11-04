@@ -21,6 +21,9 @@ interface Vendor {
   created_at: string
 }
 
+import AuthGuard from '@/components/AuthGuard'
+
+
 export default function VendorsPage() {
   const [vendors, setVendors] = useState<Vendor[]>([])
   const [loading, setLoading] = useState(true)
@@ -103,16 +106,17 @@ export default function VendorsPage() {
   }
 
   return (
+    <AuthGuard requiredRole="admin">
     <div className="p-8">
       {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Vendors & Suppliers</h1>
-          <p className="text-zinc-400">Manage your vendor relationships</p>
+          <h1 className="text-3xl font-bold text-[#fff8f1] mb-2">Vendors & Suppliers</h1>
+          <p className="text-pasada-300">Manage your vendor relationships</p>
         </div>
         <Link
           href="/admin/vendors/new"
-          className="flex items-center space-x-2 bg-gradient-to-r from-yellow-600 to-yellow-700 text-white px-6 py-3 rounded-lg hover:from-yellow-700 hover:to-yellow-800 transition-all shadow-lg shadow-yellow-900/30"
+          className="glass-button flex items-center space-x-2 px-6 py-3"
         >
           <Plus className="w-5 h-5" />
           <span>Add Vendor</span>
@@ -128,13 +132,13 @@ export default function VendorsPage() {
             placeholder="Search vendors by name, contact, category..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-yellow-600 transition-colors"
+            className="w-full pl-10 pr-4 py-3 bg-pasada-900 border border-pasada-700 rounded-lg text-[#fff8f1] placeholder-pasada-400 focus:outline-none focus:border-gold-500 transition-colors"
           />
         </div>
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value as any)}
-          className="px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white focus:outline-none focus:border-yellow-600 transition-colors min-w-[200px]"
+          className="px-4 py-3 bg-pasada-900 border border-pasada-700 rounded-lg text-[#fff8f1] focus:outline-none focus:border-gold-500 transition-colors min-w-[200px]"
         >
           <option value="all">All Status</option>
           <option value="active">Active</option>
@@ -152,7 +156,7 @@ export default function VendorsPage() {
 
       {/* Empty State */}
       {!loading && filteredVendors.length === 0 && (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-12 text-center">
+        <div className="bg-pasada-950 border border-pasada-800 rounded-xl p-12 text-center">
           <div className="w-16 h-16 bg-yellow-600/10 rounded-lg flex items-center justify-center mx-auto mb-4">
             <Users className="w-8 h-8 text-yellow-600" />
           </div>
@@ -165,7 +169,7 @@ export default function VendorsPage() {
           {!searchTerm && filterStatus === 'all' && (
             <Link
               href="/admin/vendors/new"
-              className="inline-flex items-center space-x-2 bg-gradient-to-r from-yellow-600 to-yellow-700 text-white px-6 py-3 rounded-lg hover:from-yellow-700 hover:to-yellow-800 transition-all"
+              className="glass-button inline-flex items-center space-x-2 px-6 py-3"
             >
               <Plus className="w-5 h-5" />
               <span>Add Your First Vendor</span>
@@ -180,13 +184,13 @@ export default function VendorsPage() {
           {filteredVendors.map((vendor) => (
             <div
               key={vendor.id}
-              className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-yellow-600/50 transition-all"
+              className="bg-pasada-950 border border-pasada-800 rounded-xl p-6 hover:border-gold-500/50 transition-all"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-white mb-1">{vendor.name}</h3>
+                  <h3 className="text-lg font-semibold text-[#fff8f1] mb-1">{vendor.name}</h3>
                   {vendor.contact_name && (
-                    <p className="text-sm text-zinc-400">{vendor.contact_name}</p>
+                    <p className="text-sm text-pasada-300">{vendor.contact_name}</p>
                   )}
                 </div>
                 <span className={`px-3 py-1 rounded text-xs border ${getStatusColor(vendor.status)}`}>
@@ -196,23 +200,23 @@ export default function VendorsPage() {
 
               <div className="space-y-2 mb-4">
                 {vendor.email && (
-                  <div className="flex items-center text-sm text-zinc-400">
+                  <div className="flex items-center text-sm text-pasada-300">
                     <Mail className="w-4 h-4 mr-2" />
-                    <a href={`mailto:${vendor.email}`} className="hover:text-yellow-600">
+                    <a href={`mailto:${vendor.email}`} className="hover:text-gold-400">
                       {vendor.email}
                     </a>
                   </div>
                 )}
                 {vendor.phone && (
-                  <div className="flex items-center text-sm text-zinc-400">
+                  <div className="flex items-center text-sm text-pasada-300">
                     <Phone className="w-4 h-4 mr-2" />
-                    <a href={`tel:${vendor.phone}`} className="hover:text-yellow-600">
+                    <a href={`tel:${vendor.phone}`} className="hover:text-gold-400">
                       {vendor.phone}
                     </a>
                   </div>
                 )}
                 {vendor.city && vendor.state && (
-                  <div className="text-sm text-zinc-500">
+                  <div className="text-sm text-pasada-400">
                     {vendor.city}, {vendor.state}
                   </div>
                 )}
@@ -227,29 +231,29 @@ export default function VendorsPage() {
                 {vendor.rating && (
                   <div className="flex items-center text-sm">
                     <Star className="w-4 h-4 text-yellow-600 mr-1" />
-                    <span className="text-white font-medium">{vendor.rating.toFixed(1)}</span>
+                    <span className="text-[#fff8f1] font-medium">{vendor.rating.toFixed(1)}</span>
                   </div>
                 )}
               </div>
 
-              <div className="flex items-center justify-between pt-4 border-t border-zinc-800">
+              <div className="flex items-center justify-between pt-4 border-t border-pasada-700">
                 <Link
                   href={`/admin/vendors/${vendor.id}`}
-                  className="text-sm text-yellow-600 hover:text-yellow-500 transition-colors"
+                  className="text-sm text-gold-400 hover:text-gold-300 transition-colors"
                 >
                   View Details
                 </Link>
                 <div className="flex items-center space-x-2">
                   <Link
                     href={`/admin/vendors/${vendor.id}/edit`}
-                    className="p-2 bg-zinc-800 text-zinc-400 rounded-lg hover:bg-zinc-700 hover:text-yellow-600 transition-all"
+                    className="p-2 bg-pasada-900 text-pasada-300 rounded-lg hover:bg-pasada-800 hover:text-gold-400 transition-all"
                     title="Edit Vendor"
                   >
                     <Edit className="w-4 h-4" />
                   </Link>
                   <button
                     onClick={() => handleDelete(vendor.id)}
-                    className="p-2 bg-zinc-800 text-zinc-400 rounded-lg hover:bg-red-900/20 hover:text-red-600 transition-all"
+                    className="p-2 bg-pasada-900 text-pasada-300 rounded-lg hover:bg-red-900/20 hover:text-red-600 transition-all"
                     title="Delete Vendor"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -264,30 +268,31 @@ export default function VendorsPage() {
       {/* Stats */}
       {!loading && filteredVendors.length > 0 && (
         <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-            <div className="text-2xl font-bold text-white">{filteredVendors.length}</div>
-            <div className="text-sm text-zinc-400">Total Vendors</div>
+          <div className="bg-pasada-950 border border-pasada-800 rounded-lg p-4">
+            <div className="text-2xl font-bold text-[#fff8f1]">{filteredVendors.length}</div>
+            <div className="text-sm text-pasada-300">Total Vendors</div>
           </div>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+          <div className="bg-pasada-950 border border-pasada-800 rounded-lg p-4">
             <div className="text-2xl font-bold text-green-600">
               {vendors.filter(v => v.status === 'active').length}
             </div>
-            <div className="text-sm text-zinc-400">Active</div>
+            <div className="text-sm text-pasada-300">Active</div>
           </div>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+          <div className="bg-pasada-950 border border-pasada-800 rounded-lg p-4">
             <div className="text-2xl font-bold text-yellow-600">
               {vendors.filter(v => v.rating && v.rating >= 4).length}
             </div>
-            <div className="text-sm text-zinc-400">Top Rated</div>
+            <div className="text-sm text-pasada-300">Top Rated</div>
           </div>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+          <div className="bg-pasada-950 border border-pasada-800 rounded-lg p-4">
             <div className="text-2xl font-bold text-blue-600">
               {Array.from(new Set(vendors.map(v => v.category).filter(Boolean))).length}
             </div>
-            <div className="text-sm text-zinc-400">Categories</div>
+            <div className="text-sm text-pasada-300">Categories</div>
           </div>
         </div>
       )}
     </div>
+    </AuthGuard>
   )
 }

@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Save, Plus, Trash2, Search, X, FileText, Building, Calendar, DollarSign } from 'lucide-react'
+import { ArrowLeft, Save, Plus, Trash2, Search, X, FileText, Building, Calendar, Calculator, Info } from 'lucide-react'
 import { createBrowserClient } from '@/lib/supabase/client'
+import { formatIndianCurrency } from '@/lib/gst/calculator'
 
 interface LineItem {
   id: string
@@ -12,10 +13,16 @@ interface LineItem {
   material_name: string
   description: string
   category: string
+  hsn_sac_code: string
   quantity: number
   unit: string
   unit_price: number
-  tax_percent: number
+  taxable_value: number
+  tax_rate: number
+  gst_amount: number
+  cgst_amount: number
+  sgst_amount: number
+  igst_amount: number
   total: number
 }
 
@@ -27,7 +34,23 @@ interface Project {
     name: string
     email: string | null
     phone: string | null
+    gstin: string | null
+    state_code: string | null
+    client_type: 'B2B' | 'B2C'
   }
+}
+
+interface HSNSACCode {
+  code: string
+  description: string
+  type: 'HSN' | 'SAC'
+  gst_rate: number
+  is_active: boolean
+}
+
+interface CompanyGST {
+  gstin: string
+  state_code: string
 }
 
 interface Material {
@@ -38,6 +61,9 @@ interface Material {
   unit_price: number | null
 }
 
+import AuthGuard from '@/components/AuthGuard'
+
+
 export default function NewQuotationPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -45,17 +71,20 @@ export default function NewQuotationPage() {
 
   const preselectedProjectId = searchParams.get('project')
 
-  const [loading, setLoading] = useState(false)
+  // const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [projects, setProjects] = useState<Project[]>([])
   const [materials, setMaterials] = useState<Material[]>([])
+  const [hsnSacCodes, setHsnSacCodes] = useState<HSNSACCode[]>([])
+  const [companyGST, setCompanyGST] = useState<CompanyGST | null>(null)
+  const [isIntraState, setIsIntraState] = useState(false)
+  const [invoiceType, setInvoiceType] = useState<'B2B' | 'B2C'>('B2C')
   const [showMaterialSelector, setShowMaterialSelector] = useState(false)
   const [materialSearch, setMaterialSearch] = useState('')
 
   const [formData, setFormData] = useState({
     title: '',
     project_id: preselectedProjectId || '',
-    tax_percent: '18',
     discount: '0',
     valid_until: '',
     notes: '',
@@ -67,7 +96,26 @@ export default function NewQuotationPage() {
   useEffect(() => {
     fetchProjects()
     fetchMaterials()
+    fetchCompanyGST()
+    fetchHSNSACCodes()
   }, [])
+
+  useEffect(() => {
+    if (formData.project_id && companyGST) {
+      const selectedProject = projects.find(p => p.id === formData.project_id)
+      if (selectedProject?.clients) {
+        const client = selectedProject.clients
+        if (client.gstin && companyGST.gstin) {
+          setInvoiceType('B2B')
+          setIsIntraState(client.state_code === companyGST.state_code)
+        } else {
+          setInvoiceType('B2C')
+          setIsIntraState(true)
+        }
+        recalculateAllLineItems()
+      }
+    }
+  }, [formData.project_id, companyGST, projects])
 
   const fetchProjects = async () => {
     try {
@@ -80,15 +128,63 @@ export default function NewQuotationPage() {
             id,
             name,
             email,
-            phone
+            phone,
+            gstin,
+            state_code,
+            client_type
           )
         `)
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      setProjects(data || [])
+      // Transform the data to match our interface
+      const transformedData = (data || []).map((p: any) => ({
+        ...p,
+        clients: p.clients[0] || null
+      }))
+      setProjects(transformedData as any)
     } catch (error) {
       console.error('Error fetching projects:', error)
+    }
+  }
+
+  const fetchCompanyGST = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('company_settings')
+        .select('gstin, state_code')
+        .single()
+      if (error) throw error
+      setCompanyGST(data)
+    } catch (error) {
+      console.error('Error fetching company GST:', error)
+    }
+  }
+
+  const fetchHSNSACCodes = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('hsn_sac_master')
+        .select('code, description, type, gst_rate, is_active')
+        .eq('is_active', true)
+        .order('code')
+      if (error) throw error
+      setHsnSacCodes(data || [])
+    } catch (error) {
+      console.error('Error fetching HSN/SAC codes:', error)
+    }
+  }
+
+  const calculateGSTForItem = (quantity: number, unitPrice: number, taxRate: number) => {
+    const taxableValue = quantity * unitPrice
+    const gstAmount = (taxableValue * taxRate) / 100
+    return {
+      taxableValue,
+      gstAmount,
+      cgstAmount: isIntraState ? gstAmount / 2 : 0,
+      sgstAmount: isIntraState ? gstAmount / 2 : 0,
+      igstAmount: isIntraState ? 0 : gstAmount,
+      total: taxableValue + gstAmount
     }
   }
 
@@ -107,17 +203,28 @@ export default function NewQuotationPage() {
   }
 
   const addLineItem = (material?: Material) => {
+    const quantity = 1
+    const unitPrice = material?.unit_price || 0
+    const taxRate = 18
+    const gstCalc = calculateGSTForItem(quantity, unitPrice, taxRate)
+    
     const newItem: LineItem = {
       id: Math.random().toString(36).substring(7),
       material_id: material?.id || null,
       material_name: material?.name || '',
       description: '',
       category: material?.category || 'Labor',
-      quantity: 1,
+      hsn_sac_code: '',
+      quantity,
       unit: material?.unit || 'piece',
-      unit_price: material?.unit_price || 0,
-      tax_percent: parseFloat(formData.tax_percent) || 0,
-      total: material?.unit_price || 0
+      unit_price: unitPrice,
+      taxable_value: gstCalc.taxableValue,
+      tax_rate: taxRate,
+      gst_amount: gstCalc.gstAmount,
+      cgst_amount: gstCalc.cgstAmount,
+      sgst_amount: gstCalc.sgstAmount,
+      igst_amount: gstCalc.igstAmount,
+      total: gstCalc.total
     }
     setLineItems([...lineItems, newItem])
     setShowMaterialSelector(false)
@@ -128,11 +235,31 @@ export default function NewQuotationPage() {
     setLineItems(lineItems.map(item => {
       if (item.id === id) {
         const updated = { ...item, [field]: value }
-        // Recalculate total
-        updated.total = updated.quantity * updated.unit_price
+        const gstCalc = calculateGSTForItem(updated.quantity, updated.unit_price, updated.tax_rate)
+        updated.taxable_value = gstCalc.taxableValue
+        updated.gst_amount = gstCalc.gstAmount
+        updated.cgst_amount = gstCalc.cgstAmount
+        updated.sgst_amount = gstCalc.sgstAmount
+        updated.igst_amount = gstCalc.igstAmount
+        updated.total = gstCalc.total
         return updated
       }
       return item
+    }))
+  }
+
+  const recalculateAllLineItems = () => {
+    setLineItems(lineItems.map(item => {
+      const gstCalc = calculateGSTForItem(item.quantity, item.unit_price, item.tax_rate)
+      return {
+        ...item,
+        taxable_value: gstCalc.taxableValue,
+        gst_amount: gstCalc.gstAmount,
+        cgst_amount: gstCalc.cgstAmount,
+        sgst_amount: gstCalc.sgstAmount,
+        igst_amount: gstCalc.igstAmount,
+        total: gstCalc.total
+      }
     }))
   }
 
@@ -140,22 +267,25 @@ export default function NewQuotationPage() {
     setLineItems(lineItems.filter(item => item.id !== id))
   }
 
-  const calculateSubtotal = () => {
-    return lineItems.reduce((sum, item) => sum + item.total, 0)
-  }
-
-  const calculateTax = () => {
-    const subtotal = calculateSubtotal()
+  const calculateGSTBreakdown = () => {
+    const subtotal = lineItems.reduce((sum, item) => sum + item.taxable_value, 0)
+    const totalCGST = lineItems.reduce((sum, item) => sum + item.cgst_amount, 0)
+    const totalSGST = lineItems.reduce((sum, item) => sum + item.sgst_amount, 0)
+    const totalIGST = lineItems.reduce((sum, item) => sum + item.igst_amount, 0)
+    const totalGST = totalCGST + totalSGST + totalIGST
     const discount = parseFloat(formData.discount) || 0
-    const afterDiscount = subtotal - discount
-    return (parseFloat(formData.tax_percent) / 100) * afterDiscount
-  }
-
-  const calculateTotal = () => {
-    const subtotal = calculateSubtotal()
-    const discount = parseFloat(formData.discount) || 0
-    const tax = calculateTax()
-    return subtotal - discount + tax
+    const grandTotal = subtotal - discount + totalGST
+    
+    return {
+      subtotal,
+      discount,
+      taxableAmount: subtotal - discount,
+      totalCGST,
+      totalSGST,
+      totalIGST,
+      totalGST,
+      grandTotal
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -172,15 +302,27 @@ export default function NewQuotationPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
 
-      // Create quotation
+      const gstBreakdown = calculateGSTBreakdown()
+
+      // Create quotation with GST fields
       const { data: quotation, error: quotationError } = await supabase
         .from('quotations')
         .insert([{
           title: formData.title,
           project_id: formData.project_id,
-          total_amount: calculateSubtotal(),
-          tax_percent: parseFloat(formData.tax_percent),
+          subtotal: gstBreakdown.subtotal,
+          total_amount: gstBreakdown.subtotal,
+          gst_rate: 18,
+          gst_amount: gstBreakdown.totalGST,
+          cgst_amount: gstBreakdown.totalCGST,
+          sgst_amount: gstBreakdown.totalSGST,
+          igst_amount: gstBreakdown.totalIGST,
+          total_with_gst: gstBreakdown.grandTotal,
           discount: parseFloat(formData.discount) || null,
+          buyer_gstin: selectedProject?.clients.gstin,
+          seller_gstin: companyGST?.gstin,
+          place_of_supply: selectedProject?.clients.state_code,
+          invoice_type: invoiceType,
           status: 'draft',
           version: 1,
           valid_until: formData.valid_until || null,
@@ -193,16 +335,22 @@ export default function NewQuotationPage() {
 
       if (quotationError) throw quotationError
 
-      // Create line items
+      // Create line items with GST fields
       const itemsToInsert = lineItems.map(item => ({
         quotation_id: quotation.id,
         material_id: item.material_id,
         category: item.category,
         description: item.material_name + (item.description ? ' - ' + item.description : ''),
+        hsn_sac_code: item.hsn_sac_code || null,
         quantity: item.quantity,
         unit: item.unit,
         unit_price: item.unit_price,
-        tax_percent: item.tax_percent,
+        taxable_value: item.taxable_value,
+        tax_rate: item.tax_rate,
+        gst_amount: item.gst_amount,
+        cgst_amount: item.cgst_amount,
+        sgst_amount: item.sgst_amount,
+        igst_amount: item.igst_amount,
         total: item.total
       }))
 
@@ -212,6 +360,7 @@ export default function NewQuotationPage() {
 
       if (itemsError) throw itemsError
 
+      alert('Quotation created successfully!')
       router.push('/admin/quotations')
     } catch (error) {
       console.error('Error creating quotation:', error)
@@ -222,13 +371,14 @@ export default function NewQuotationPage() {
   }
 
   const selectedProject = projects.find(p => p.id === formData.project_id)
-
   const filteredMaterials = materials.filter(m =>
     m.name.toLowerCase().includes(materialSearch.toLowerCase()) ||
     m.category?.toLowerCase().includes(materialSearch.toLowerCase())
   )
+  const gstBreakdown = calculateGSTBreakdown()
 
   return (
+    <AuthGuard requiredRole="admin">
     <div className="p-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
@@ -240,9 +390,41 @@ export default function NewQuotationPage() {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Quotations
           </Link>
-          <h1 className="text-3xl font-bold text-white mb-2">New Quotation</h1>
-          <p className="text-zinc-400">Create a professional quotation for your project</p>
+          <h1 className="text-3xl font-bold text-white mb-2">New GST Quotation</h1>
+          <p className="text-zinc-400">Create a professional GST-compliant quotation with automatic tax calculations</p>
         </div>
+
+        {/* Transaction Info Card */}
+        {companyGST && selectedProject?.clients && (
+          <div className="bg-blue-900/20 border border-blue-700 rounded-lg p-4 mb-6">
+            <div className="flex items-center mb-3">
+              <Info className="w-5 h-5 text-blue-400 mr-2" />
+              <h3 className="text-sm font-semibold text-blue-400">Transaction Information</h3>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div>
+                <span className="text-zinc-400">Type:</span>
+                <span className="ml-2 text-white font-medium">
+                  {invoiceType} ({isIntraState ? 'Intra-State' : 'Inter-State'})
+                </span>
+              </div>
+              <div>
+                <span className="text-zinc-400">Seller GSTIN:</span>
+                <span className="ml-2 text-white font-mono text-xs">{companyGST.gstin}</span>
+              </div>
+              <div>
+                <span className="text-zinc-400">Buyer GSTIN:</span>
+                <span className="ml-2 text-white font-mono text-xs">
+                  {selectedProject.clients.gstin || 'N/A (B2C)'}
+                </span>
+              </div>
+              <div>
+                <span className="text-zinc-400">Place of Supply:</span>
+                <span className="ml-2 text-white">{selectedProject.clients.state_code || 'N/A'}</span>
+              </div>
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Project & Basic Info */}
@@ -261,13 +443,13 @@ export default function NewQuotationPage() {
                   required
                 >
                   <option value="">Choose a project</option>
-                  {projects.map((project) => (
+                  {projects.map((project: any) => (
                     <option key={project.id} value={project.id}>
-                      {project.name} - {project.clients.name}
+                      {project.name} - {project.clients?.name || 'No client'}
                     </option>
                   ))}
                 </select>
-                {selectedProject && (
+                {selectedProject && selectedProject.clients && (
                   <div className="mt-2 p-3 bg-zinc-800 rounded text-sm text-zinc-400">
                     Client: {selectedProject.clients.name} | 
                     Email: {selectedProject.clients.email || 'N/A'} | 
@@ -326,11 +508,15 @@ export default function NewQuotationPage() {
                 <table className="w-full">
                   <thead className="bg-zinc-800/50">
                     <tr>
-                      <th className="text-left px-3 py-2 text-sm font-medium text-zinc-300">Item</th>
-                      <th className="text-center px-3 py-2 text-sm font-medium text-zinc-300">Qty</th>
-                      <th className="text-right px-3 py-2 text-sm font-medium text-zinc-300">Price</th>
-                      <th className="text-right px-3 py-2 text-sm font-medium text-zinc-300">Total</th>
-                      <th className="text-center px-3 py-2 text-sm font-medium text-zinc-300"></th>
+                      <th className="text-left px-3 py-2 text-xs font-medium text-zinc-300">Item</th>
+                      <th className="text-left px-3 py-2 text-xs font-medium text-zinc-300">HSN/SAC</th>
+                      <th className="text-center px-3 py-2 text-xs font-medium text-zinc-300">Qty</th>
+                      <th className="text-right px-3 py-2 text-xs font-medium text-zinc-300">Rate</th>
+                      <th className="text-center px-3 py-2 text-xs font-medium text-zinc-300">GST%</th>
+                      <th className="text-right px-3 py-2 text-xs font-medium text-zinc-300">Taxable</th>
+                      <th className="text-right px-3 py-2 text-xs font-medium text-zinc-300">GST Amt</th>
+                      <th className="text-right px-3 py-2 text-xs font-medium text-zinc-300">Total</th>
+                      <th className="text-center px-3 py-2 text-xs font-medium text-zinc-300"></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-800">
@@ -349,8 +535,28 @@ export default function NewQuotationPage() {
                             value={item.description}
                             onChange={(e) => updateLineItem(item.id, 'description', e.target.value)}
                             className="w-full px-2 py-1 mt-1 bg-zinc-800 border border-zinc-700 rounded text-zinc-400 text-xs"
-                            placeholder="Description (optional)"
+                            placeholder="Description"
                           />
+                        </td>
+                        <td className="px-3 py-3">
+                          <select
+                            value={item.hsn_sac_code}
+                            onChange={(e) => {
+                              const code = hsnSacCodes.find(c => c.code === e.target.value)
+                              updateLineItem(item.id, 'hsn_sac_code', e.target.value)
+                              if (code) {
+                                updateLineItem(item.id, 'tax_rate', code.gst_rate)
+                              }
+                            }}
+                            className="w-32 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-xs"
+                          >
+                            <option value="">Select</option>
+                            {hsnSacCodes.map(code => (
+                              <option key={code.code} value={code.code}>
+                                {code.code}
+                              </option>
+                            ))}
+                          </select>
                         </td>
                         <td className="px-3 py-3">
                           <input
@@ -372,8 +578,25 @@ export default function NewQuotationPage() {
                             step="0.01"
                           />
                         </td>
-                        <td className="px-3 py-3 text-right text-white font-medium">
-                          ₹{item.total.toLocaleString('en-IN')}
+                        <td className="px-3 py-3">
+                          <input
+                            type="number"
+                            value={item.tax_rate}
+                            onChange={(e) => updateLineItem(item.id, 'tax_rate', parseFloat(e.target.value))}
+                            className="w-16 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-white text-sm text-center"
+                            min="0"
+                            max="28"
+                            step="0.01"
+                          />
+                        </td>
+                        <td className="px-3 py-3 text-right text-zinc-300 font-medium text-sm">
+                          ₹{item.taxable_value.toFixed(2)}
+                        </td>
+                        <td className="px-3 py-3 text-right text-yellow-400 font-medium text-sm">
+                          ₹{item.gst_amount.toFixed(2)}
+                        </td>
+                        <td className="px-3 py-3 text-right text-white font-bold text-sm">
+                          ₹{item.total.toFixed(2)}
                         </td>
                         <td className="px-3 py-3 text-center">
                           <button
@@ -392,26 +615,15 @@ export default function NewQuotationPage() {
             )}
           </div>
 
-          {/* Calculations */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-            <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
-              <DollarSign className="w-5 h-5 mr-2 text-yellow-600" />
-              Pricing & Calculations
-            </h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-2">Tax Percent (%)</label>
-                  <input
-                    type="number"
-                    value={formData.tax_percent}
-                    onChange={(e) => setFormData({ ...formData, tax_percent: e.target.value })}
-                    className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white"
-                    min="0"
-                    max="100"
-                    step="0.01"
-                  />
-                </div>
+          {/* GST Breakdown & Summary */}
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Discount & Validity */}
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+              <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
+                <Calendar className="w-5 h-5 mr-2 text-yellow-600" />
+                Additional Details
+              </h2>
+              <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-zinc-300 mb-2">Discount (₹)</label>
                   <input
@@ -433,23 +645,57 @@ export default function NewQuotationPage() {
                   />
                 </div>
               </div>
-              <div className="bg-zinc-800 rounded-lg p-4 space-y-2">
+            </div>
+
+            {/* GST Breakdown */}
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+              <div className="flex items-center mb-4">
+                <Calculator className="w-5 h-5 text-yellow-600 mr-2" />
+                <h3 className="text-lg font-semibold text-white">GST Breakdown</h3>
+              </div>
+              
+              <div className="space-y-3">
                 <div className="flex justify-between text-zinc-300">
-                  <span>Subtotal:</span>
-                  <span className="font-medium">₹{calculateSubtotal().toLocaleString('en-IN')}</span>
+                  <span>Subtotal (Taxable):</span>
+                  <span className="font-semibold">{formatIndianCurrency(gstBreakdown.subtotal)}</span>
                 </div>
-                <div className="flex justify-between text-zinc-300">
-                  <span>Discount:</span>
-                  <span className="font-medium text-red-400">-₹{parseFloat(formData.discount || '0').toLocaleString('en-IN')}</span>
+                
+                {gstBreakdown.discount > 0 && (
+                  <div className="flex justify-between text-zinc-300">
+                    <span>Discount:</span>
+                    <span className="text-red-400">- {formatIndianCurrency(gstBreakdown.discount)}</span>
+                  </div>
+                )}
+                
+                <div className="border-t border-zinc-700 pt-3">
+                  {isIntraState ? (
+                    <>
+                      <div className="flex justify-between text-zinc-300 mb-2">
+                        <span>CGST:</span>
+                        <span>{formatIndianCurrency(gstBreakdown.totalCGST)}</span>
+                      </div>
+                      <div className="flex justify-between text-zinc-300">
+                        <span>SGST:</span>
+                        <span>{formatIndianCurrency(gstBreakdown.totalSGST)}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex justify-between text-zinc-300">
+                      <span>IGST:</span>
+                      <span>{formatIndianCurrency(gstBreakdown.totalIGST)}</span>
+                    </div>
+                  )}
                 </div>
-                <div className="flex justify-between text-zinc-300">
-                  <span>Tax ({formData.tax_percent}%):</span>
-                  <span className="font-medium">₹{calculateTax().toLocaleString('en-IN')}</span>
-                </div>
-                <div className="border-t border-zinc-700 pt-2 mt-2"></div>
-                <div className="flex justify-between text-white text-xl font-bold">
-                  <span>Total:</span>
-                  <span className="text-yellow-600">₹{calculateTotal().toLocaleString('en-IN')}</span>
+                
+                <div className="border-t border-zinc-700 pt-3">
+                  <div className="flex justify-between text-white font-semibold mb-2">
+                    <span>Total GST:</span>
+                    <span className="text-yellow-400">{formatIndianCurrency(gstBreakdown.totalGST)}</span>
+                  </div>
+                  <div className="flex justify-between text-white text-xl font-bold">
+                    <span>Grand Total:</span>
+                    <span className="text-yellow-600">{formatIndianCurrency(gstBreakdown.grandTotal)}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -526,5 +772,6 @@ export default function NewQuotationPage() {
         )}
       </div>
     </div>
+    </AuthGuard>
   )
 }

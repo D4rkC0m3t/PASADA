@@ -28,6 +28,9 @@ interface Booking {
   } | null
 }
 
+import AuthGuard from '@/components/AuthGuard'
+
+
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
@@ -147,6 +150,7 @@ export default function BookingsPage() {
   }
 
   return (
+    <AuthGuard requiredRole="admin">
     <div className="p-8">
       {/* Header */}
       <div className="mb-8 flex items-center justify-between">
@@ -347,5 +351,6 @@ export default function BookingsPage() {
         </div>
       )}
     </div>
+    </AuthGuard>
   )
 }

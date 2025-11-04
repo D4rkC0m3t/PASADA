@@ -11,6 +11,9 @@ interface Client {
   name: string
 }
 
+import AuthGuard from '@/components/AuthGuard'
+
+
 export default function NewProjectPage() {
   const router = useRouter()
   const supabase = createBrowserClient()
@@ -20,12 +23,12 @@ export default function NewProjectPage() {
     name: '',
     client_id: '',
     site_location: '',
-    type: 'residential' as 'residential' | 'commercial' | 'retail' | 'hospitality' | 'other',
+    type: 'kitchen' as 'kitchen' | 'bedroom' | 'living_room' | 'office' | 'full_home' | 'commercial' | 'other',
     area_sqft: '',
-    status: 'inquiry' as 'inquiry' | 'proposal' | 'approved' | 'in_progress' | 'completed' | 'on_hold' | 'cancelled',
+    status: 'planning' as 'planning' | 'design' | 'quotation' | 'approved' | 'in_progress' | 'completed' | 'on_hold' | 'cancelled',
     budget: '',
-    timeline_days: '',
     start_date: '',
+    end_date: '',
     notes: ''
   })
 
@@ -65,8 +68,8 @@ export default function NewProjectPage() {
           area_sqft: formData.area_sqft ? parseFloat(formData.area_sqft) : null,
           status: formData.status,
           budget: formData.budget ? parseFloat(formData.budget) : null,
-          timeline_days: formData.timeline_days ? parseInt(formData.timeline_days) : null,
           start_date: formData.start_date || null,
+          end_date: formData.end_date || null,
           notes: formData.notes || null,
           created_by: user.id,
           updated_by: user.id
@@ -85,6 +88,7 @@ export default function NewProjectPage() {
   }
 
   return (
+    <AuthGuard requiredRole="admin">
     <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 p-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
@@ -262,15 +266,13 @@ export default function NewProjectPage() {
 
               <div>
                 <label className="block text-sm font-medium text-zinc-300 mb-2">
-                  Timeline (days)
+                  End Date
                 </label>
                 <input
-                  type="number"
-                  value={formData.timeline_days}
-                  onChange={(e) => setFormData({ ...formData, timeline_days: e.target.value })}
-                  className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-yellow-600 transition-colors"
-                  placeholder="90"
-                  min="1"
+                  type="date"
+                  value={formData.end_date}
+                  onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                  className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-yellow-600 transition-colors"
                 />
               </div>
             </div>
@@ -308,5 +310,6 @@ export default function NewProjectPage() {
         </form>
       </div>
     </div>
+    </AuthGuard>
   )
 }

@@ -22,6 +22,9 @@ interface Project {
   }
 }
 
+import AuthGuard from '@/components/AuthGuard'
+
+
 export default function NewBookingPage() {
   const router = useRouter()
   const supabase = createBrowserClient()
@@ -143,6 +146,7 @@ export default function NewBookingPage() {
   const selectedClient = clients.find(c => c.id === formData.client_id)
 
   return (
+    <AuthGuard requiredRole="admin">
     <div className="p-8">
       <div className="max-w-3xl mx-auto">
         {/* Header */}
@@ -384,5 +388,6 @@ export default function NewBookingPage() {
         </form>
       </div>
     </div>
+    </AuthGuard>
   )
 }

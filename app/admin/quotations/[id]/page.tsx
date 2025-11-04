@@ -305,7 +305,7 @@ export default function QuotationDetailPage() {
             <button
               onClick={() => setShowSendModal(true)}
               disabled={sendingEmail}
-              className="flex items-center space-x-2 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="glass-button flex items-center space-x-2 px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Send className="w-4 h-4" />
               <span>Send Email</span>
@@ -614,7 +614,7 @@ export default function QuotationDetailPage() {
               <button
                 onClick={handleSendEmail}
                 disabled={sendingEmail}
-                className="flex-1 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                className="glass-button flex-1 px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
                 {sendingEmail ? (
                   <>

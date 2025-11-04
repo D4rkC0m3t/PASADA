@@ -268,7 +268,7 @@ export default function ClientQuotationDetailPage() {
             <button
               onClick={handleDownloadPDF}
               disabled={downloading}
-              className="flex items-center space-x-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all disabled:opacity-50"
+              className="glass-button flex items-center space-x-2 px-6 py-3 disabled:opacity-50"
             >
               {downloading ? (
                 <>
@@ -438,7 +438,7 @@ export default function ClientQuotationDetailPage() {
             <button
               onClick={handleReject}
               disabled={processing}
-              className="flex-1 flex items-center justify-center space-x-2 px-6 py-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-lg font-semibold"
+              className="glass-button flex items-center space-x-2 px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed text-lg font-semibold"
             >
               <X className="w-6 h-6" />
               <span>{processing ? 'Processing...' : 'Reject Quotation'}</span>

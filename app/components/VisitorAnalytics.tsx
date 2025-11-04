@@ -12,19 +12,20 @@ interface VisitorStats {
   topReferrers: { referrer: string; count: number }[];
 }
 
-export const VisitorAnalytics = ({ days = 7 }: { days?: number }) => {
+export const VisitorAnalytics = ({ days: initialDays = 7 }: { days?: number }) => {
   const [stats, setStats] = useState<VisitorStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedDays, setSelectedDays] = useState(initialDays);
 
   useEffect(() => {
     fetchVisitorStats();
-  }, [days]);
+  }, [selectedDays]);
 
   const fetchVisitorStats = async () => {
     try {
       const supabase = createBrowserClient();
       const since = new Date();
-      since.setDate(since.getDate() - days);
+      since.setDate(since.getDate() - selectedDays);
 
       // Total visits
       const { count: totalVisits } = await supabase
@@ -102,16 +103,16 @@ export const VisitorAnalytics = ({ days = 7 }: { days?: number }) => {
 
   if (loading) {
     return (
-      <div className="bg-[#151515] rounded-2xl p-6 border border-[#2a2a2a] h-64 flex items-center justify-center">
-        <div className="text-gray-400">Loading analytics...</div>
+      <div className="bg-pasada-950 rounded-2xl p-6 border border-pasada-800 h-64 flex items-center justify-center">
+        <div className="text-pasada-300">Loading analytics...</div>
       </div>
     );
   }
 
   if (!stats) {
     return (
-      <div className="bg-[#151515] rounded-2xl p-6 border border-[#2a2a2a]">
-        <div className="text-gray-400">No visitor data available</div>
+      <div className="bg-pasada-950 rounded-2xl p-6 border border-pasada-800">
+        <div className="text-pasada-300">No visitor data available</div>
       </div>
     );
   }
@@ -125,81 +126,116 @@ export const VisitorAnalytics = ({ days = 7 }: { days?: number }) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
-      className="bg-[#151515] rounded-2xl p-6 border border-[#2a2a2a]"
+      transition={{ duration: 0.6, delay: 0.4, type: "spring" }}
+      className="glassmorphic-card p-6"
     >
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-[#fff8f1]">Visitor Analytics</h3>
-        <span className="text-xs text-gray-400">Last {days} days</span>
+        <div>
+          <h3 className="card-title text-xl">Visitor Analytics</h3>
+          <p className="body-text text-xs mt-1">Real-time website insights</p>
+        </div>
+        
+        {/* Time Range Selector */}
+        <select
+          value={selectedDays}
+          onChange={(e) => setSelectedDays(Number(e.target.value))}
+          className="glass-input text-sm font-medium focus:border-gold-500"
+        >
+          <option value="7">Last 7 days</option>
+          <option value="14">Last 14 days</option>
+          <option value="30">Last 30 days</option>
+          <option value="60">Last 60 days</option>
+          <option value="90">Last 90 days</option>
+        </select>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-[#0f0f0f] rounded-lg p-4 border border-[#222]">
+        <motion.div 
+          whileHover={{ y: -2, scale: 1.02 }}
+          className="glass-card p-4 hover:border-blue-500/30"
+        >
           <div className="flex items-center gap-2 mb-2">
-            <Eye className="w-4 h-4 text-blue-400" />
-            <span className="text-xs text-gray-400">Total Visits</span>
+            <div className="p-2 rounded-lg bg-blue-500/10">
+              <Eye className="w-4 h-4 text-blue-400" />
+            </div>
+            <span className="label-text text-xs">Total Visits</span>
           </div>
-          <div className="text-2xl font-bold text-[#fff8f1]">{stats.totalVisits.toLocaleString()}</div>
-        </div>
+          <div className="hero-number text-2xl">{stats.totalVisits.toLocaleString()}</div>
+        </motion.div>
 
-        <div className="bg-[#0f0f0f] rounded-lg p-4 border border-[#222]">
+        <motion.div 
+          whileHover={{ y: -2, scale: 1.02 }}
+          className="glass-card p-4 hover:border-green-500/30"
+        >
           <div className="flex items-center gap-2 mb-2">
-            <Users className="w-4 h-4 text-green-400" />
-            <span className="text-xs text-gray-400">Unique Visitors</span>
+            <div className="p-2 rounded-lg bg-green-500/10">
+              <Users className="w-4 h-4 text-green-400" />
+            </div>
+            <span className="label-text text-xs">Unique Visitors</span>
           </div>
-          <div className="text-2xl font-bold text-[#fff8f1]">{stats.uniqueVisitors.toLocaleString()}</div>
-        </div>
+          <div className="hero-number text-2xl">{stats.uniqueVisitors.toLocaleString()}</div>
+        </motion.div>
 
-        <div className="bg-[#0f0f0f] rounded-lg p-4 border border-[#222]">
+        <motion.div 
+          whileHover={{ y: -2, scale: 1.02 }}
+          className="glass-card p-4 hover:border-yellow-500/30"
+        >
           <div className="flex items-center gap-2 mb-2">
-            <Clock className="w-4 h-4 text-yellow-400" />
-            <span className="text-xs text-gray-400">Avg. Duration</span>
+            <div className="p-2 rounded-lg bg-yellow-500/10">
+              <Clock className="w-4 h-4 text-yellow-400" />
+            </div>
+            <span className="label-text text-xs">Avg. Duration</span>
           </div>
-          <div className="text-2xl font-bold text-[#fff8f1]">{formatDuration(stats.avgDuration)}</div>
-        </div>
+          <div className="hero-number text-2xl">{formatDuration(stats.avgDuration)}</div>
+        </motion.div>
 
-        <div className="bg-[#0f0f0f] rounded-lg p-4 border border-[#222]">
+        <motion.div 
+          whileHover={{ y: -2, scale: 1.02 }}
+          className="glass-card p-4 hover:border-purple-500/30"
+        >
           <div className="flex items-center gap-2 mb-2">
-            <TrendingUp className="w-4 h-4 text-purple-400" />
-            <span className="text-xs text-gray-400">Conversion</span>
+            <div className="p-2 rounded-lg bg-purple-500/10">
+              <TrendingUp className="w-4 h-4 text-purple-400" />
+            </div>
+            <span className="label-text text-xs">Conversion</span>
           </div>
-          <div className="text-2xl font-bold text-[#fff8f1]">-</div>
-        </div>
+          <div className="hero-number text-2xl">-</div>
+        </motion.div>
       </div>
 
       {/* Top Pages & Referrers */}
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Top Pages */}
         <div>
-          <h4 className="text-sm font-semibold text-[#fff8f1] mb-3">Top Pages</h4>
+          <h4 className="card-title text-sm mb-3">Top Pages</h4>
           <div className="space-y-2">
             {stats.topPages.map((page, idx) => (
-              <div key={idx} className="flex items-center justify-between p-2 bg-[#0f0f0f] rounded border border-[#222]">
-                <span className="text-sm text-gray-300 truncate">{page.page_name}</span>
-                <span className="text-xs text-gray-400 ml-2">{page.count}</span>
+              <div key={idx} className="flex items-center justify-between p-2 bg-pasada-900 rounded border border-pasada-700">
+                <span className="text-sm text-pasada-200 truncate">{page.page_name}</span>
+                <span className="text-xs text-pasada-300 ml-2">{page.count}</span>
               </div>
             ))}
             {stats.topPages.length === 0 && (
-              <div className="text-sm text-gray-500 text-center py-4">No page data</div>
+              <div className="text-sm text-pasada-400 text-center py-4">No page data</div>
             )}
           </div>
         </div>
 
         {/* Top Referrers */}
         <div>
-          <h4 className="text-sm font-semibold text-[#fff8f1] mb-3">Top Referrers</h4>
+          <h4 className="card-title text-sm mb-3">Top Referrers</h4>
           <div className="space-y-2">
             {stats.topReferrers.map((ref, idx) => (
-              <div key={idx} className="flex items-center justify-between p-2 bg-[#0f0f0f] rounded border border-[#222]">
-                <span className="text-sm text-gray-300 truncate">{new URL(ref.referrer).hostname}</span>
-                <span className="text-xs text-gray-400 ml-2">{ref.count}</span>
+              <div key={idx} className="flex items-center justify-between p-2 bg-pasada-900 rounded border border-pasada-700">
+                <span className="text-sm text-pasada-200 truncate">{new URL(ref.referrer).hostname}</span>
+                <span className="text-xs text-pasada-300 ml-2">{ref.count}</span>
               </div>
             ))}
             {stats.topReferrers.length === 0 && (
-              <div className="text-sm text-gray-500 text-center py-4">No referrer data</div>
+              <div className="text-sm text-pasada-400 text-center py-4">No referrer data</div>
             )}
           </div>
         </div>

@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Home, FolderOpen, FileText, Calendar, MessageSquare, LogOut, ArrowLeft, Eye, Download, Check, X } from 'lucide-react'
+import { ArrowLeft, Eye, Download, Check, X, FileText } from 'lucide-react'
 import { createBrowserClient } from '@/lib/supabase/client'
+import { ClientLayout } from '@/app/components/ClientLayout'
 
 interface Quotation {
   id: string
@@ -180,68 +181,27 @@ export default function ClientQuotationsPage() {
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950">
-      {/* Sidebar */}
-      <aside className="fixed left-0 top-0 h-full w-64 bg-zinc-900 border-r border-zinc-800 p-6">
-        <div className="flex items-center space-x-3 mb-8">
-          <div className="w-10 h-10 bg-gradient-to-br from-yellow-600 to-yellow-700 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-xl">P</span>
-          </div>
-          <span className="text-xl font-bold text-white">PASADA</span>
-        </div>
-
-        <nav className="space-y-2">
-          <Link href="/client/dashboard" className="flex items-center space-x-3 px-4 py-3 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all">
-            <Home className="w-5 h-5" />
-            <span>Dashboard</span>
-          </Link>
-          <Link href="/client/projects" className="flex items-center space-x-3 px-4 py-3 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all">
-            <FolderOpen className="w-5 h-5" />
-            <span>My Projects</span>
-          </Link>
-          <Link href="/client/quotations" className="flex items-center space-x-3 px-4 py-3 bg-yellow-600/10 text-yellow-600 rounded-lg">
-            <FileText className="w-5 h-5" />
-            <span>Quotations</span>
-          </Link>
-          <Link href="/client/bookings" className="flex items-center space-x-3 px-4 py-3 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all">
-            <Calendar className="w-5 h-5" />
-            <span>Bookings</span>
-          </Link>
-          <Link href="/client/messages" className="flex items-center space-x-3 px-4 py-3 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all">
-            <MessageSquare className="w-5 h-5" />
-            <span>Messages</span>
-          </Link>
-        </nav>
-
-        <div className="absolute bottom-6 left-6 right-6">
-          <Link href="/login" className="flex items-center space-x-3 px-4 py-3 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all">
-            <LogOut className="w-5 h-5" />
-            <span>Logout</span>
-          </Link>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="ml-64 p-8">
-        {/* Header */}
-        <div className="mb-8">
-          <Link
-            href="/client/dashboard"
-            className="inline-flex items-center text-zinc-400 hover:text-white mb-4 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
-          </Link>
-          <h1 className="text-3xl font-bold text-white mb-2">My Quotations</h1>
-          <p className="text-zinc-400">Review and approve project quotations</p>
-        </div>
+    <ClientLayout 
+      title="My Quotations" 
+      subtitle="Review and approve project quotations"
+    >
+      {/* Back Button */}
+      <div className="mb-6">
+        <Link
+          href="/client/dashboard"
+          className="inline-flex items-center text-blue-400 hover:text-blue-300 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Dashboard
+        </Link>
+      </div>
 
         {/* Filter */}
         <div className="mb-6">
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value as any)}
-            className="px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white focus:outline-none focus:border-yellow-600 transition-colors"
+            className="glass-input px-4 py-3 focus:border-blue-500"
           >
             <option value="all">All Quotations</option>
             <option value="sent">Pending Review</option>
@@ -257,7 +217,7 @@ export default function ClientQuotationsPage() {
             <p className="text-zinc-400">Loading quotations...</p>
           </div>
         ) : filteredQuotations.length === 0 ? (
-          <div className="text-center py-12 bg-zinc-900 border border-zinc-800 rounded-xl">
+          <div className="text-center py-12 glassmorphic-card">
             <FileText className="w-16 h-16 text-zinc-700 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-white mb-2">No Quotations</h3>
             <p className="text-zinc-400 mb-6">
@@ -275,7 +235,7 @@ export default function ClientQuotationsPage() {
         ) : (
           <div className="space-y-6">
             {filteredQuotations.map((quotation) => (
-              <div key={quotation.id} className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-zinc-700 transition-all">
+              <div key={quotation.id} className="glassmorphic-card p-6 hover:border-blue-500/30 transition-all">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
@@ -295,7 +255,7 @@ export default function ClientQuotationsPage() {
                     </div>
                   </div>
                   <div className="text-right ml-6">
-                    <div className="text-2xl font-bold text-yellow-600">
+                    <div className="text-2xl font-bold text-blue-400">
                       ₹{quotation.total_amount.toLocaleString('en-IN')}
                     </div>
                     <div className="text-xs text-zinc-500">Total Amount</div>
@@ -303,10 +263,10 @@ export default function ClientQuotationsPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center space-x-3 pt-4 border-t border-zinc-800">
+                <div className="flex items-center space-x-3 pt-4 glass-divider">
                   <Link
                     href={`/client/quotations/${quotation.id}`}
-                    className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all"
+                    className="glass-button flex items-center space-x-2 px-4 py-2"
                   >
                     <Eye className="w-4 h-4" />
                     <span>View Details</span>
@@ -315,7 +275,7 @@ export default function ClientQuotationsPage() {
                   <button
                     onClick={() => handleDownloadPDF(quotation.id, quotation.quotation_number)}
                     disabled={downloadingId === quotation.id}
-                    className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="glass-button flex items-center space-x-2 px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {downloadingId === quotation.id ? (
                       <>
@@ -370,34 +330,33 @@ export default function ClientQuotationsPage() {
         {/* Summary Stats */}
         {!loading && quotations.length > 0 && (
           <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+            <div className="glass-card p-4 hover:shadow-lg transition-all">
               <div className="text-2xl font-bold text-white">{quotations.length}</div>
-              <div className="text-sm text-zinc-400">Total Quotations</div>
+              <div className="text-sm text-blue-300">Total Quotations</div>
             </div>
-            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-              <div className="text-2xl font-bold text-blue-600">
+            <div className="glass-card p-4 hover:shadow-lg transition-all">
+              <div className="text-2xl font-bold text-blue-400">
                 {quotations.filter(q => q.status === 'sent' || q.status === 'viewed').length}
               </div>
-              <div className="text-sm text-zinc-400">Pending Review</div>
+              <div className="text-sm text-blue-300">Pending Review</div>
             </div>
-            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-              <div className="text-2xl font-bold text-green-600">
+            <div className="glass-card p-4 hover:shadow-lg transition-all">
+              <div className="text-2xl font-bold text-green-400">
                 {quotations.filter(q => q.status === 'approved').length}
               </div>
-              <div className="text-sm text-zinc-400">Approved</div>
+              <div className="text-sm text-blue-300">Approved</div>
             </div>
-            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-              <div className="text-2xl font-bold text-yellow-600">
+            <div className="glass-card p-4 hover:shadow-lg transition-all">
+              <div className="text-2xl font-bold text-blue-400">
                 ₹{quotations
                   .filter(q => q.status === 'approved')
                   .reduce((sum, q) => sum + q.total_amount, 0)
                   .toLocaleString('en-IN')}
               </div>
-              <div className="text-sm text-zinc-400">Approved Value</div>
+              <div className="text-sm text-blue-300">Approved Value</div>
             </div>
           </div>
         )}
-      </main>
-    </div>
+    </ClientLayout>
   )
 }

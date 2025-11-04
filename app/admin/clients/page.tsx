@@ -17,6 +17,9 @@ interface Client {
   created_at: string
 }
 
+import AuthGuard from '@/components/AuthGuard'
+
+
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
@@ -96,7 +99,8 @@ export default function ClientsPage() {
   }
 
   return (
-    <div className="p-8">
+    <AuthGuard requiredRole="admin">
+      <div className="p-8">
       {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <div>
@@ -294,6 +298,7 @@ export default function ClientsPage() {
         )}
         </>
       )}
-    </div>
+      </div>
+    </AuthGuard>
   )
 }
