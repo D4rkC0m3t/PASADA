@@ -4,8 +4,7 @@ import { FC, useLayoutEffect, useState } from "react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { scrollLock, scrollToElement, twcx } from "@/lib/utils";
 import { useAnimation } from "./hooks/useAnimationNew";
-import { SCROLL_LOCK_NAME, Z_INDEX, LOGO_CONFIG } from "./config";
-import styles from "./Preloader.module.css";
+import { SCROLL_LOCK_NAME, LOGO_CONFIG } from "./config";
 
 export interface PreloaderProps {
   className?: string;
