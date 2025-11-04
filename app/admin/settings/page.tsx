@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Save, User, Building2, Mail, Phone, MapPin, Globe, FileText, Bell, Lock, Palette, Database } from 'lucide-react'
+import { ArrowLeft, Save, User, Building2, Bell, Lock, Palette, Database } from 'lucide-react'
 import { createBrowserClient } from '@/lib/supabase/client'
 import AuthGuard from '@/components/AuthGuard'
 

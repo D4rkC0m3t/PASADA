@@ -5,6 +5,3 @@ app/api/invoices/[id]/pdf/
 
 # Temporarily ignore problematic client pages
 app/client/projects/[id]/
-
-# Temporarily ignore admin settings
-app/admin/settings/
