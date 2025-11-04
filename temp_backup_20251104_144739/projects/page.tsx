@@ -2,85 +2,72 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Eye, ArrowLeft, FolderOpen } from 'lucide-react'
+import { Plus, Search, Edit, Trash2, Eye, MapPin, DollarSign, Calendar } from 'lucide-react'
 import { createBrowserClient } from '@/lib/supabase/client'
-import { ClientLayout } from '@/app/components/ClientLayout'
 
 interface Project {
   id: string
   name: string
-  description: string | null
-  type: string | null
+  client_id: string
   site_location: string | null
+  type: 'residential' | 'commercial' | 'retail' | 'hospitality' | 'other'
   area_sqft: number | null
-  status: string
+  status: 'inquiry' | 'proposal' | 'approved' | 'in_progress' | 'completed' | 'on_hold' | 'cancelled'
   budget: number | null
-  actual_cost: number | null
-  start_date: string | null
-  end_date: string | null
-  completion_date: string | null
   created_at: string
+  clients: {
+    name: string
+  }
 }
 
-export default function ClientProjectsPage() {
+import AuthGuard from '@/components/AuthGuard'
+
+
+export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
-  // We'll use this state if we need to display client name in the future
-  const [clientName, setClientName] = useState('')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filterStatus, setFilterStatus] = useState<'all' | 'inquiry' | 'proposal' | 'approved' | 'in_progress' | 'completed' | 'on_hold' | 'cancelled'>('all')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
+  const ITEMS_PER_PAGE = 20
   const supabase = createBrowserClient()
 
   useEffect(() => {
-    fetchClientProjects()
-  }, [])
+    fetchProjects()
+  }, [currentPage, searchTerm, filterStatus])
 
-  const fetchClientProjects = async () => {
+  const fetchProjects = async () => {
+    setLoading(true)
     try {
-      setLoading(true)
+      const offset = (currentPage - 1) * ITEMS_PER_PAGE
       
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        console.error('No user logged in')
-        return
-      }
-
-      // Get user profile to find client_id
-      const { error: profileError } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
-
-      if (profileError) throw profileError
-
-      // For now, we'll fetch projects by email matching
-      // In production, you'd have a proper client_id relationship
-      const { data: clientData, error: clientError } = await supabase
-        .from('clients')
-        .select('id, name')
-        .eq('email', user.email)
-        .single()
-
-      if (clientError) {
-        console.error('Client not found:', clientError)
-        setProjects([])
-        return
-      }
-
-      // Store client name if needed for UI
-      // Currently not used but keeping for future features
-      setClientName(clientData.name)
-
-      // Fetch projects for this client
-      const { data: projectsData, error: projectsError } = await supabase
+      let query = supabase
         .from('projects')
-        .select('*')
-        .eq('client_id', clientData.id)
+        .select(`
+          *,
+          clients (
+            name
+          )
+        `, { count: 'exact' })
+      
+      // Apply search filter
+      if (searchTerm) {
+        query = query.or(`name.ilike.%${searchTerm}%,site_location.ilike.%${searchTerm}%`)
+      }
+      
+      // Apply status filter
+      if (filterStatus !== 'all') {
+        query = query.eq('status', filterStatus)
+      }
+      
+      const { data, error, count } = await query
+        .range(offset, offset + ITEMS_PER_PAGE - 1)
         .order('created_at', { ascending: false })
 
-      if (projectsError) throw projectsError
-
-      setProjects(projectsData || [])
+      if (error) throw error
+      setProjects(data || [])
+      setTotalCount(count || 0)
     } catch (error) {
       console.error('Error fetching projects:', error)
     } finally {
@@ -88,220 +75,291 @@ export default function ClientProjectsPage() {
     }
   }
 
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this project?')) return
+
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', id)
+
+      if (error) throw error
+      fetchProjects()
+    } catch (error) {
+      console.error('Error deleting project:', error)
+      alert('Failed to delete project')
+    }
+  }
+
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE)
+  
+  const handleSearch = (value: string) => {
+    setSearchTerm(value)
+    setCurrentPage(1)
+  }
+  
+  const handleFilterChange = (value: typeof filterStatus) => {
+    setFilterStatus(value)
+    setCurrentPage(1)
+  }
+
   const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      planning: 'bg-yellow-600/10 text-yellow-600 border-yellow-600/20',
-      design: 'bg-purple-600/10 text-purple-600 border-purple-600/20',
-      quotation: 'bg-blue-600/10 text-blue-600 border-blue-600/20',
+    const colors = {
+      inquiry: 'bg-blue-600/10 text-blue-600 border-blue-600/20',
+      proposal: 'bg-purple-600/10 text-purple-600 border-purple-600/20',
       approved: 'bg-green-600/10 text-green-600 border-green-600/20',
-      in_progress: 'bg-cyan-600/10 text-cyan-600 border-cyan-600/20',
+      in_progress: 'bg-yellow-600/10 text-yellow-600 border-yellow-600/20',
       completed: 'bg-emerald-600/10 text-emerald-600 border-emerald-600/20',
       on_hold: 'bg-orange-600/10 text-orange-600 border-orange-600/20',
       cancelled: 'bg-red-600/10 text-red-600 border-red-600/20',
     }
-    return colors[status] || colors.planning
+    return colors[status as keyof typeof colors] || colors.inquiry
   }
 
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'Not set'
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
-  }
-
-  const calculateProgress = (project: Project) => {
-    if (project.status === 'completed') return 100
-    if (project.status === 'cancelled') return 0
-    
-    const statusProgress: Record<string, number> = {
-      planning: 10,
-      design: 25,
-      quotation: 40,
-      approved: 50,
-      in_progress: 75,
-      on_hold: 50,
+  // Calculate stats from ALL projects (for accurate totals)
+  const [stats, setStats] = useState({ total: 0, inProgress: 0, completed: 0, totalBudget: 0 })
+  
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const { data } = await supabase
+          .from('projects')
+          .select('status, budget')
+        
+        if (data) {
+          setStats({
+            total: data.length,
+            inProgress: data.filter(p => p.status === 'in_progress').length,
+            completed: data.filter(p => p.status === 'completed').length,
+            totalBudget: data.reduce((sum, p) => sum + (p.budget || 0), 0)
+          })
+        }
+      } catch (error) {
+        console.error('Error fetching stats:', error)
+      }
     }
-    
-    return statusProgress[project.status] || 0
-  }
+    fetchStats()
+  }, [])
 
   return (
-    <ClientLayout 
-      title="My Projects" 
-      subtitle="View and track your interior design projects"
-    >
-      {/* Back Button */}
-      <div className="mb-6">
-        <Link
-          href="/client/dashboard"
-          className="inline-flex items-center text-blue-400 hover:text-blue-300 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Dashboard
-        </Link>
-      </div>
+    <AuthGuard requiredRole="admin">
+    <div className="p-8">
+        {/* Header */}
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">Projects</h1>
+            <p className="text-zinc-400">Manage all your interior design projects</p>
+          </div>
+          <Link
+            href="/admin/projects/new"
+            className="flex items-center space-x-2 bg-gradient-to-r from-yellow-600 to-yellow-700 text-white px-6 py-3 rounded-lg hover:from-yellow-700 hover:to-yellow-800 transition-all shadow-lg shadow-yellow-900/30"
+          >
+            <Plus className="w-5 h-5" />
+            <span>New Project</span>
+          </Link>
+        </div>
 
-        {/* Projects List */}
+        {/* Filters */}
+        <div className="mb-6 flex flex-col sm:flex-row gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-500 w-5 h-5" />
+            <input
+              type="text"
+              placeholder="Search projects..."
+              value={searchTerm}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-yellow-600 transition-colors"
+            />
+          </div>
+          <select
+            value={filterStatus}
+            onChange={(e) => handleFilterChange(e.target.value as typeof filterStatus)}
+            className="px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white focus:outline-none focus:border-yellow-600 transition-colors"
+          >
+            <option value="all">All Status</option>
+            <option value="inquiry">Inquiry</option>
+            <option value="proposal">Proposal</option>
+            <option value="approved">Approved</option>
+            <option value="in_progress">In Progress</option>
+            <option value="completed">Completed</option>
+            <option value="on_hold">On Hold</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+
+        {/* Stats */}
+        {!loading && (
+          <div className="mb-6 text-sm text-zinc-400">
+            Showing {projects.length > 0 ? ((currentPage - 1) * ITEMS_PER_PAGE + 1) : 0} - {Math.min(currentPage * ITEMS_PER_PAGE, totalCount)} of {totalCount} projects
+          </div>
+        )}
+
+        {/* Projects Grid */}
         {loading ? (
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-600 mb-4"></div>
-            <p className="text-zinc-400">Loading your projects...</p>
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-600"></div>
+            <p className="text-zinc-400 mt-4">Loading projects...</p>
           </div>
         ) : projects.length === 0 ? (
-          <div className="text-center py-12 glassmorphic-card">
-            <FolderOpen className="w-16 h-16 text-zinc-700 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-white mb-2">No Projects Yet</h3>
-            <p className="text-zinc-400 mb-6">You don't have any projects assigned yet.</p>
+          <div className="text-center py-12 bg-zinc-900 border border-zinc-800 rounded-xl">
+            <p className="text-zinc-400 text-lg">No projects found</p>
             <Link
-              href="/client/dashboard"
-              className="inline-flex items-center space-x-2 text-yellow-600 hover:text-yellow-500"
+              href="/admin/projects/new"
+              className="inline-block mt-4 text-yellow-600 hover:text-yellow-500"
             >
-              <span>Go to Dashboard</span>
+              Create your first project
             </Link>
           </div>
         ) : (
-          <div className="space-y-6">
+          <>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {projects.map((project) => (
-              <div key={project.id} className="glassmorphic-card p-6 hover:border-blue-500/30 transition-all">
+              <div
+                key={project.id}
+                className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-yellow-600/50 transition-all"
+              >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <h2 className="text-2xl font-semibold text-white">{project.name}</h2>
-                      <span className={`px-3 py-1 rounded text-sm border ${getStatusColor(project.status)}`}>
-                        {project.status.replace('_', ' ').toUpperCase()}
-                      </span>
-                    </div>
-                    {project.description && (
-                      <p className="text-zinc-400 text-sm mb-3">{project.description}</p>
-                    )}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                      {project.type && (
-                        <div>
-                          <div className="text-zinc-500 mb-1">Type</div>
-                          <div className="text-white capitalize">{project.type.replace('_', ' ')}</div>
-                        </div>
-                      )}
-                      {project.site_location && (
-                        <div>
-                          <div className="text-zinc-500 mb-1">Location</div>
-                          <div className="text-white">{project.site_location}</div>
-                        </div>
-                      )}
-                      {project.area_sqft && (
-                        <div>
-                          <div className="text-zinc-500 mb-1">Area</div>
-                          <div className="text-white">{project.area_sqft} sq ft</div>
-                        </div>
-                      )}
-                      {project.budget && (
-                        <div>
-                          <div className="text-zinc-500 mb-1">Budget</div>
-                          <div className="text-white">₹{project.budget.toLocaleString('en-IN')}</div>
-                        </div>
-                      )}
-                    </div>
+                    <h3 className="text-lg font-semibold text-white mb-1">{project.name}</h3>
+                    <p className="text-sm text-zinc-400">{project.clients?.name || 'Unknown Client'}</p>
                   </div>
-                  <Link
-                    href={`/client/projects/${project.id}`}
-                    className="glass-button flex items-center space-x-2 px-4 py-2 ml-4"
-                  >
-                    <Eye className="w-4 h-4" />
-                    <span>View Details</span>
-                  </Link>
+                  <span className={`px-3 py-1 rounded text-xs border ${getStatusColor(project.status)}`}>
+                    {project.status.replace('_', ' ').toUpperCase()}
+                  </span>
                 </div>
 
-                {/* Timeline */}
-                <div className="grid md:grid-cols-3 gap-4 mb-4">
-                  <div className="glass-card p-4">
-                    <div className="text-zinc-400 text-xs mb-1">Start Date</div>
-                    <div className="text-white font-medium">{formatDate(project.start_date)}</div>
-                  </div>
-                  <div className="glass-card p-4">
-                    <div className="text-zinc-400 text-xs mb-1">Expected End</div>
-                    <div className="text-white font-medium">{formatDate(project.end_date)}</div>
-                  </div>
-                  {project.completion_date && (
-                    <div className="glass-card p-4">
-                      <div className="text-zinc-400 text-xs mb-1">Completed On</div>
-                      <div className="text-green-400 font-medium">{formatDate(project.completion_date)}</div>
+                <div className="space-y-2 mb-4">
+                  {project.site_location && (
+                    <div className="flex items-center text-sm text-zinc-400">
+                      <MapPin className="w-4 h-4 mr-2" />
+                      <span>{project.site_location}</span>
+                    </div>
+                  )}
+                  {project.budget && (
+                    <div className="flex items-center text-sm text-zinc-400">
+                      <DollarSign className="w-4 h-4 mr-2" />
+                      <span>₹{project.budget.toLocaleString('en-IN')}</span>
+                    </div>
+                  )}
+                  {project.area_sqft && (
+                    <div className="flex items-center text-sm text-zinc-400">
+                      <Calendar className="w-4 h-4 mr-2" />
+                      <span>{project.area_sqft} sq.ft</span>
                     </div>
                   )}
                 </div>
 
-                {/* Progress Bar */}
-                <div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-zinc-400">Progress</span>
-                    <span className="text-white font-medium">{calculateProgress(project)}%</span>
-                  </div>
-                  <div className="w-full bg-pasada-900/50 rounded-full h-3">
-                    <div 
-                      className={`h-3 rounded-full transition-all ${
-                        project.status === 'completed' ? 'bg-green-600' :
-                        project.status === 'cancelled' ? 'bg-red-600' :
-                        project.status === 'on_hold' ? 'bg-orange-600' :
-                        'bg-blue-600'
-                      }`}
-                      style={{ width: `${calculateProgress(project)}%` }}
-                    ></div>
+                <div className="flex items-center justify-between pt-4 border-t border-zinc-800">
+                  <span className="text-xs text-zinc-500">
+                    {new Date(project.created_at).toLocaleDateString()}
+                  </span>
+                  <div className="flex items-center space-x-2">
+                    <Link
+                      href={`/admin/projects/${project.id}`}
+                      className="p-2 text-zinc-400 hover:text-blue-600 hover:bg-blue-600/10 rounded-lg transition-all"
+                      title="View"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Link>
+                    <Link
+                      href={`/admin/projects/${project.id}/edit`}
+                      className="p-2 text-zinc-400 hover:text-yellow-600 hover:bg-yellow-600/10 rounded-lg transition-all"
+                      title="Edit"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Link>
+                    <button
+                      onClick={() => handleDelete(project.id)}
+                      className="p-2 text-zinc-400 hover:text-red-600 hover:bg-red-600/10 rounded-lg transition-all"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
-
-                {/* Budget Tracking */}
-                {project.budget && (
-                  <div className="mt-4 pt-4 glass-divider">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <span className="text-zinc-400 text-sm">Budget Allocated</span>
-                        <div className="text-white font-medium">₹{project.budget.toLocaleString('en-IN')}</div>
-                      </div>
-                      {project.actual_cost && (
-                        <div className="text-right">
-                          <span className="text-zinc-400 text-sm">Actual Cost</span>
-                          <div className={`font-medium ${
-                            project.actual_cost > project.budget ? 'text-red-400' : 'text-green-400'
-                          }`}>
-                            ₹{project.actual_cost.toLocaleString('en-IN')}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
               </div>
             ))}
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-8 flex items-center justify-center space-x-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 bg-zinc-800 text-white rounded-lg hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                Previous
+              </button>
+              
+              <div className="flex space-x-2">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum
+                  if (totalPages <= 5) {
+                    pageNum = i + 1
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i
+                  } else {
+                    pageNum = currentPage - 2 + i
+                  }
+                  
+                  return (
+    <AuthGuard requiredRole="admin">
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`w-10 h-10 rounded-lg transition-all ${
+                        currentPage === pageNum
+                          ? 'bg-yellow-600 text-white'
+                          : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+    </AuthGuard>
+                  )
+                })}
+              </div>
+              
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 bg-zinc-800 text-white rounded-lg hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                Next
+              </button>
+            </div>
+          )}
+          </>
         )}
 
-        {/* Summary Stats */}
-        {!loading && projects.length > 0 && (
+        {/* Stats */}
+        {!loading && stats.total > 0 && (
           <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="glass-card p-4 hover:shadow-lg transition-all">
-              <div className="text-2xl font-bold text-white">{projects.length}</div>
-              <div className="text-sm text-blue-300">Total Projects</div>
+            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+              <div className="text-2xl font-bold text-white">{stats.total}</div>
+              <div className="text-sm text-zinc-400">Total Projects</div>
             </div>
-            <div className="glass-card p-4 hover:shadow-lg transition-all">
-              <div className="text-2xl font-bold text-blue-400">
-                {projects.filter(p => p.status === 'in_progress').length}
-              </div>
-              <div className="text-sm text-blue-300">In Progress</div>
+            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+              <div className="text-2xl font-bold text-green-600">{stats.inProgress}</div>
+              <div className="text-sm text-zinc-400">In Progress</div>
             </div>
-            <div className="glass-card p-4 hover:shadow-lg transition-all">
-              <div className="text-2xl font-bold text-green-400">
-                {projects.filter(p => p.status === 'completed').length}
-              </div>
-              <div className="text-sm text-blue-300">Completed</div>
+            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+              <div className="text-2xl font-bold text-emerald-600">{stats.completed}</div>
+              <div className="text-sm text-zinc-400">Completed</div>
             </div>
-            <div className="glass-card p-4 hover:shadow-lg transition-all">
-              <div className="text-2xl font-bold text-blue-400">
-                {projects.filter(p => ['planning', 'design', 'quotation'].includes(p.status)).length}
+            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+              <div className="text-2xl font-bold text-yellow-600">
+                ₹{stats.totalBudget.toLocaleString('en-IN')}
               </div>
-              <div className="text-sm text-blue-300">Planning</div>
+              <div className="text-sm text-zinc-400">Total Budget</div>
             </div>
           </div>
         )}
-    </ClientLayout>
+    </div>
+    </AuthGuard>
   )
 }

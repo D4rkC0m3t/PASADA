@@ -13,7 +13,6 @@ export default function FluidText() {
   useEffect(() => {
     let rafId = 0 as number;
     let cleanup = () => {};
-    let lastTime: number | undefined;
 
     const init = async () => {
       if (!containerRef.current) return;

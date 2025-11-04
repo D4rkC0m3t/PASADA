@@ -1,82 +1,75 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
-import { 
-  Home, FolderOpen, FileText, Calendar, MessageSquare, LogOut, ArrowLeft, 
-  MapPin, Ruler, IndianRupee, Clock, User, Upload, Eye,
-  CheckCircle, XCircle, AlertCircle, PlayCircle, PauseCircle, Package
-} from 'lucide-react'
+import { ArrowLeft, Edit, Trash2, User, MapPin, Building, Calendar, DollarSign, Ruler, FileText, Plus } from 'lucide-react'
 import { createBrowserClient } from '@/lib/supabase/client'
-import DocumentUpload from '@/components/DocumentUpload'
 
 interface Project {
   id: string
   name: string
-  description: string | null
-  type: string | null
+  client_id: string
   site_location: string | null
+  type: string
   area_sqft: number | null
   status: string
   budget: number | null
-  actual_cost: number | null
+  timeline_days: number | null
   start_date: string | null
   end_date: string | null
-  completion_date: string | null
+  notes: string | null
   created_at: string
+  updated_at: string | null
   clients: {
+    id: string
     name: string
-    email: string
+    contact_name: string | null
+    email: string | null
     phone: string | null
   }
 }
 
 interface Quotation {
   id: string
-  quotation_number: string
   title: string
   total_amount: number
+  tax_percent: number | null
+  discount: number | null
   status: string
+  version: number
   created_at: string
 }
 
-interface ActivityLog {
-  id: string
-  action: string
-  details: string | null
-  created_at: string
-  user_profiles: {
-    full_name: string
-  } | null
-}
-
-export default function ClientProjectDetailPage() {
+export default function ProjectDetailPage() {
   const params = useParams()
+  const router = useRouter()
+  const supabase = createBrowserClient()
   const projectId = params.id as string
+
   const [project, setProject] = useState<Project | null>(null)
   const [quotations, setQuotations] = useState<Quotation[]>([])
-  const [activities, setActivities] = useState<ActivityLog[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'overview' | 'timeline' | 'quotations' | 'documents'>('overview')
-  const supabase = createBrowserClient()
 
   useEffect(() => {
     if (projectId) {
-      fetchProjectDetails()
-      fetchQuotations()
-      fetchActivities()
+      fetchProjectData()
     }
   }, [projectId])
 
-  const fetchProjectDetails = async () => {
+  const fetchProjectData = async () => {
     try {
-      const { data, error } = await supabase
+      setLoading(true)
+
+      // Fetch project with client details
+      const { data: projectData, error: projectError } = await supabase
         .from('projects')
         .select(`
           *,
           clients (
+            id,
             name,
+            contact_name,
             email,
             phone
           )
@@ -84,158 +77,80 @@ export default function ClientProjectDetailPage() {
         .eq('id', projectId)
         .single()
 
-      if (error) throw error
-      setProject(data)
+      if (projectError) throw projectError
+      setProject(projectData)
+
+      // Fetch quotations for this project
+      const { data: quotationsData, error: quotationsError } = await supabase
+        .from('quotations')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('created_at', { ascending: false })
+
+      if (quotationsError) throw quotationsError
+      setQuotations(quotationsData || [])
+
     } catch (error) {
-      console.error('Error fetching project:', error)
+      console.error('Error fetching project data:', error)
+      alert('Failed to load project details')
     } finally {
       setLoading(false)
     }
   }
 
-  const fetchQuotations = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('quotations')
-        .select('id, quotation_number, title, total_amount, status, created_at')
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-      setQuotations(data || [])
-    } catch (error) {
-      console.error('Error fetching quotations:', error)
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this project? This will also delete all associated quotations.')) {
+      return
     }
-  }
 
-  const fetchActivities = async () => {
     try {
-      const { data, error } = await supabase
-        .from('activity_log')
-        .select(`
-          id,
-          action,
-          details,
-          created_at,
-          user_profiles (
-            full_name
-          )
-        `)
-        .eq('entity_type', 'project')
-        .eq('entity_id', projectId)
-        .order('created_at', { ascending: false })
-        .limit(20)
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', projectId)
 
       if (error) throw error
       
-      // Transform the response to match ActivityLog interface
-      const transformedData: ActivityLog[] = (data || []).map((item: any) => ({
-        id: item.id,
-        action: item.action,
-        details: item.details,
-        created_at: item.created_at,
-        user_profiles: Array.isArray(item.user_profiles) && item.user_profiles.length > 0 
-          ? item.user_profiles[0] 
-          : null
-      }))
-      
-      setActivities(transformedData)
+      router.push('/admin/projects')
     } catch (error) {
-      console.error('Error fetching activities:', error)
+      console.error('Error deleting project:', error)
+      alert('Failed to delete project. Make sure there are no dependencies.')
     }
-  }
-
-  const getStatusIcon = (status: string) => {
-    const icons: Record<string, any> = {
-      planning: AlertCircle,
-      design: Package,
-      quotation: FileText,
-      approved: CheckCircle,
-      in_progress: PlayCircle,
-      completed: CheckCircle,
-      on_hold: PauseCircle,
-      cancelled: XCircle,
-    }
-    const Icon = icons[status] || AlertCircle
-    return Icon
   }
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      planning: 'bg-yellow-600/10 text-yellow-600 border-yellow-600/20',
-      design: 'bg-purple-600/10 text-purple-600 border-purple-600/20',
-      quotation: 'bg-blue-600/10 text-blue-600 border-blue-600/20',
+      inquiry: 'bg-blue-600/10 text-blue-600 border-blue-600/20',
+      proposal: 'bg-purple-600/10 text-purple-600 border-purple-600/20',
       approved: 'bg-green-600/10 text-green-600 border-green-600/20',
-      in_progress: 'bg-cyan-600/10 text-cyan-600 border-cyan-600/20',
+      in_progress: 'bg-yellow-600/10 text-yellow-600 border-yellow-600/20',
       completed: 'bg-emerald-600/10 text-emerald-600 border-emerald-600/20',
       on_hold: 'bg-orange-600/10 text-orange-600 border-orange-600/20',
       cancelled: 'bg-red-600/10 text-red-600 border-red-600/20',
-    }
-    return colors[status] || colors.planning
-  }
-
-  const getQuotationStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      draft: 'bg-gray-600/10 text-gray-600 border-gray-600/20',
+      draft: 'bg-zinc-600/10 text-zinc-400 border-zinc-600/20',
       sent: 'bg-blue-600/10 text-blue-600 border-blue-600/20',
-      viewed: 'bg-purple-600/10 text-purple-600 border-purple-600/20',
-      approved: 'bg-green-600/10 text-green-600 border-green-600/20',
       rejected: 'bg-red-600/10 text-red-600 border-red-600/20',
+      expired: 'bg-orange-600/10 text-orange-600 border-orange-600/20',
     }
-    return colors[status] || colors.draft
+    return colors[status] || 'bg-zinc-600/10 text-zinc-400 border-zinc-600/20'
   }
 
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'Not set'
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
-  }
-
-  const formatDateTime = (dateString: string) => {
-    return new Date(dateString).toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
-
-  const calculateProgress = () => {
-    if (!project) return 0
-    if (project.status === 'completed') return 100
-    if (project.status === 'cancelled') return 0
-    
-    const statusProgress: Record<string, number> = {
-      planning: 10,
-      design: 25,
-      quotation: 40,
-      approved: 50,
-      in_progress: 75,
-      on_hold: 50,
+  const getTypeColor = (type: string) => {
+    const colors: Record<string, string> = {
+      residential: 'bg-blue-600/10 text-blue-600',
+      commercial: 'bg-purple-600/10 text-purple-600',
+      retail: 'bg-pink-600/10 text-pink-600',
+      hospitality: 'bg-green-600/10 text-green-600',
+      other: 'bg-zinc-600/10 text-zinc-400',
     }
-    
-    return statusProgress[project.status] || 0
-  }
-
-  const calculateDaysRemaining = () => {
-    if (!project?.end_date) return null
-    const endDate = new Date(project.end_date)
-    const today = new Date()
-    const diffTime = endDate.getTime() - today.getTime()
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    return diffDays
+    return colors[type] || 'bg-zinc-600/10 text-zinc-400'
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-yellow-600 mb-4"></div>
-          <p className="text-zinc-400">Loading project details...</p>
+      <div className="p-8">
+        <div className="flex items-center justify-center py-20">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-600"></div>
         </div>
       </div>
     )
@@ -243,386 +158,348 @@ export default function ClientProjectDetailPage() {
 
   if (!project) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 flex items-center justify-center">
-        <div className="text-center">
-          <FolderOpen className="w-16 h-16 text-zinc-700 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-white mb-2">Project Not Found</h3>
-          <p className="text-zinc-400 mb-6">This project doesn't exist or you don't have access to it.</p>
-          <Link
-            href="/client/projects"
-            className="glass-button inline-flex items-center space-x-2 px-6 py-3"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to Projects</span>
+      <div className="p-8">
+        <div className="text-center py-12">
+          <h2 className="text-2xl font-bold text-white mb-4">Project Not Found</h2>
+          <Link href="/admin/projects" className="text-yellow-600 hover:text-yellow-500">
+            ← Back to Projects
           </Link>
         </div>
       </div>
     )
   }
 
-  const StatusIcon = getStatusIcon(project.status)
-  const daysRemaining = calculateDaysRemaining()
+  const calculateEndDate = () => {
+    if (project.start_date && project.timeline_days) {
+      const start = new Date(project.start_date)
+      const end = new Date(start)
+      end.setDate(end.getDate() + project.timeline_days)
+      return end
+    }
+    return null
+  }
+
+  const endDate = calculateEndDate()
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950">
-      {/* Sidebar */}
-      <aside className="fixed left-0 top-0 h-full w-64 bg-zinc-900 border-r border-zinc-800 p-6 z-10">
-        <div className="flex items-center space-x-3 mb-8">
-          <div className="w-10 h-10 bg-gradient-to-br from-yellow-600 to-yellow-700 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-xl">P</span>
-          </div>
-          <span className="text-xl font-bold text-white">PASADA</span>
-        </div>
-
-        <nav className="space-y-2">
-          <Link href="/client/dashboard" className="flex items-center space-x-3 px-4 py-3 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all">
-            <Home className="w-5 h-5" />
-            <span>Dashboard</span>
-          </Link>
-          <Link href="/client/projects" className="flex items-center space-x-3 px-4 py-3 bg-yellow-600/10 text-yellow-600 rounded-lg">
-            <FolderOpen className="w-5 h-5" />
-            <span>My Projects</span>
-          </Link>
-          <Link href="/client/quotations" className="flex items-center space-x-3 px-4 py-3 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all">
-            <FileText className="w-5 h-5" />
-            <span>Quotations</span>
-          </Link>
-          <Link href="/client/bookings" className="flex items-center space-x-3 px-4 py-3 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all">
-            <Calendar className="w-5 h-5" />
-            <span>Bookings</span>
-          </Link>
-          <Link href="/client/messages" className="flex items-center space-x-3 px-4 py-3 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all">
-            <MessageSquare className="w-5 h-5" />
-            <span>Messages</span>
-          </Link>
-        </nav>
-
-        <div className="absolute bottom-6 left-6 right-6">
-          <Link href="/login" className="flex items-center space-x-3 px-4 py-3 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all">
-            <LogOut className="w-5 h-5" />
-            <span>Logout</span>
-          </Link>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="ml-64 p-8">
-        {/* Header */}
-        <div className="mb-8">
-          <Link
-            href="/client/projects"
-            className="inline-flex items-center text-zinc-400 hover:text-white mb-4 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Projects
-          </Link>
-          
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <h1 className="text-4xl font-bold text-white mb-3">{project.name}</h1>
-              <div className="flex items-center space-x-3">
-                <span className={`inline-flex items-center space-x-2 px-4 py-2 rounded-lg border ${getStatusColor(project.status)}`}>
-                  <StatusIcon className="w-4 h-4" />
-                  <span className="font-medium">{project.status.replace('_', ' ').toUpperCase()}</span>
-                </span>
-                {project.type && (
-                  <span className="px-4 py-2 bg-zinc-800 text-zinc-300 rounded-lg border border-zinc-700 capitalize">
-                    {project.type.replace('_', ' ')}
-                  </span>
-                )}
-              </div>
+    <div className="p-8">
+      {/* Header */}
+      <div className="mb-8">
+        <Link
+          href="/admin/projects"
+          className="inline-flex items-center text-zinc-400 hover:text-white mb-4 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Projects
+        </Link>
+        
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-3xl font-bold text-white">{project.name}</h1>
+              <span className={`px-3 py-1 rounded text-sm border ${getStatusColor(project.status)}`}>
+                {project.status.replace('_', ' ').toUpperCase()}
+              </span>
+              <span className={`px-3 py-1 rounded text-sm ${getTypeColor(project.type)}`}>
+                {project.type.charAt(0).toUpperCase() + project.type.slice(1)}
+              </span>
             </div>
+            <p className="text-zinc-400">
+              Created {new Date(project.created_at).toLocaleDateString('en-IN', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+            </p>
+          </div>
 
-            {/* Quick Stats Card */}
-            <div className="ml-8 bg-zinc-900 border border-zinc-800 rounded-xl p-6 min-w-[280px]">
-              <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <Link
+              href={`/admin/projects/${projectId}/edit`}
+              className="flex items-center space-x-2 px-6 py-3 bg-zinc-800 text-white rounded-lg hover:bg-zinc-700 transition-all"
+            >
+              <Edit className="w-5 h-5" />
+              <span>Edit Project</span>
+            </Link>
+            <button
+              onClick={handleDelete}
+              className="flex items-center space-x-2 px-6 py-3 bg-red-600/10 text-red-600 rounded-lg hover:bg-red-600/20 transition-all border border-red-600/20"
+            >
+              <Trash2 className="w-5 h-5" />
+              <span>Delete</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Project Information */}
+      <div className="grid lg:grid-cols-3 gap-6 mb-8">
+        {/* Main Details */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Client Information */}
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+            <h2 className="text-xl font-semibold text-white mb-6 flex items-center">
+              <User className="w-5 h-5 mr-2 text-yellow-600" />
+              Client Information
+            </h2>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm text-zinc-500 mb-1 block">Client Name</label>
+                <Link 
+                  href={`/admin/clients/${project.clients.id}`}
+                  className="text-lg font-medium text-white hover:text-yellow-600 transition-colors"
+                >
+                  {project.clients.name}
+                </Link>
+              </div>
+              
+              {project.clients.contact_name && (
                 <div>
-                  <div className="text-zinc-400 text-sm mb-1">Progress</div>
-                  <div className="flex items-center space-x-3">
-                    <div className="flex-1 bg-zinc-800 rounded-full h-2">
-                      <div 
-                        className={`h-2 rounded-full transition-all ${
-                          project.status === 'completed' ? 'bg-green-600' :
-                          project.status === 'cancelled' ? 'bg-red-600' :
-                          project.status === 'on_hold' ? 'bg-orange-600' :
-                          'bg-blue-600'
-                        }`}
-                        style={{ width: `${calculateProgress()}%` }}
-                      ></div>
-                    </div>
-                    <span className="text-white font-bold text-lg">{calculateProgress()}%</span>
-                  </div>
-                </div>
-
-                {daysRemaining !== null && project.status !== 'completed' && (
-                  <div>
-                    <div className="text-zinc-400 text-sm mb-1">Time Remaining</div>
-                    <div className={`text-2xl font-bold ${
-                      daysRemaining < 0 ? 'text-red-400' :
-                      daysRemaining < 7 ? 'text-orange-400' :
-                      'text-green-400'
-                    }`}>
-                      {daysRemaining < 0 ? 'Overdue' : `${daysRemaining} days`}
-                    </div>
-                  </div>
-                )}
-
-                {project.budget && (
-                  <div>
-                    <div className="text-zinc-400 text-sm mb-1">Budget</div>
-                    <div className="text-xl font-bold text-yellow-600">
-                      ₹{project.budget.toLocaleString('en-IN')}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <div className="mb-8 border-b border-zinc-800">
-          <div className="flex space-x-8">
-            <button
-              onClick={() => setActiveTab('overview')}
-              className={`pb-4 px-2 font-medium transition-all ${
-                activeTab === 'overview'
-                  ? 'text-yellow-600 border-b-2 border-yellow-600'
-                  : 'text-zinc-400 hover:text-white'
-              }`}
-            >
-              Overview
-            </button>
-            <button
-              onClick={() => setActiveTab('timeline')}
-              className={`pb-4 px-2 font-medium transition-all ${
-                activeTab === 'timeline'
-                  ? 'text-yellow-600 border-b-2 border-yellow-600'
-                  : 'text-zinc-400 hover:text-white'
-              }`}
-            >
-              Timeline & Activity
-            </button>
-            <button
-              onClick={() => setActiveTab('quotations')}
-              className={`pb-4 px-2 font-medium transition-all ${
-                activeTab === 'quotations'
-                  ? 'text-yellow-600 border-b-2 border-yellow-600'
-                  : 'text-zinc-400 hover:text-white'
-              }`}
-            >
-              Quotations ({quotations.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('documents')}
-              className={`pb-4 px-2 font-medium transition-all ${
-                activeTab === 'documents'
-                  ? 'text-yellow-600 border-b-2 border-yellow-600'
-                  : 'text-zinc-400 hover:text-white'
-              }`}
-            >
-              Documents
-            </button>
-          </div>
-        </div>
-
-        {/* Tab Content */}
-        {activeTab === 'overview' && (
-          <div className="space-y-6">
-            {/* Project Details Grid */}
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Description */}
-              {project.description && (
-                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-                  <h3 className="text-lg font-semibold text-white mb-3">Description</h3>
-                  <p className="text-zinc-400 leading-relaxed">{project.description}</p>
+                  <label className="text-sm text-zinc-500 mb-1 block">Contact Person</label>
+                  <p className="text-white">{project.clients.contact_name}</p>
                 </div>
               )}
-
-              {/* Client Information */}
-              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-                  <User className="w-5 h-5 mr-2" />
-                  Client Information
-                </h3>
-                <div className="space-y-3">
+              
+              <div className="grid md:grid-cols-2 gap-4">
+                {project.clients.email && (
                   <div>
-                    <div className="text-zinc-500 text-sm mb-1">Name</div>
-                    <div className="text-white font-medium">{project.clients.name}</div>
+                    <label className="text-sm text-zinc-500 mb-1 block">Email</label>
+                    <a 
+                      href={`mailto:${project.clients.email}`}
+                      className="text-white hover:text-yellow-600 transition-colors"
+                    >
+                      {project.clients.email}
+                    </a>
                   </div>
+                )}
+                
+                {project.clients.phone && (
                   <div>
-                    <div className="text-zinc-500 text-sm mb-1">Email</div>
-                    <div className="text-white">{project.clients.email}</div>
+                    <label className="text-sm text-zinc-500 mb-1 block">Phone</label>
+                    <a 
+                      href={`tel:${project.clients.phone}`}
+                      className="text-white hover:text-yellow-600 transition-colors"
+                    >
+                      {project.clients.phone}
+                    </a>
                   </div>
-                        Area
-                      </div>
-                      <div className="text-white font-medium">{project.area_sqft} sq ft</div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Timeline */}
-              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-                  <Clock className="w-5 h-5 mr-2" />
-                  Timeline
-                </h3>
-                <div className="space-y-3">
-                  <div>
-                    <div className="text-zinc-500 text-sm mb-1">Start Date</div>
-                    <div className="text-white font-medium">{formatDate(project.start_date)}</div>
-                  </div>
-                  <div>
-                    <div className="text-zinc-500 text-sm mb-1">Expected Completion</div>
-                    <div className="text-white font-medium">{formatDate(project.end_date)}</div>
-                  </div>
-                  {project.completion_date && (
-                    <div>
-                      <div className="text-zinc-500 text-sm mb-1">Actual Completion</div>
-                      <div className="text-green-400 font-medium">{formatDate(project.completion_date)}</div>
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
             </div>
-
-            {/* Budget Tracking */}
-            {project.budget && (
-              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-                  <IndianRupee className="w-5 h-5 mr-2" />
-                  Budget Overview
-                </h3>
-                <div className="grid md:grid-cols-3 gap-6">
-                  <div>
-                    <div className="text-zinc-400 text-sm mb-2">Budget Allocated</div>
-                    <div className="text-3xl font-bold text-white">
-                      ₹{project.budget.toLocaleString('en-IN')}
-                    </div>
-                  </div>
-                  {project.actual_cost && (
-                    <>
-                      <div>
-                        <div className="text-zinc-400 text-sm mb-2">Actual Cost</div>
-                        <div className={`text-3xl font-bold ${
-                          project.actual_cost > project.budget ? 'text-red-400' : 'text-green-400'
-                        }`}>
-                          ₹{project.actual_cost.toLocaleString('en-IN')}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-zinc-400 text-sm mb-2">Variance</div>
-                        <div className={`text-3xl font-bold ${
-                          project.actual_cost > project.budget ? 'text-red-400' : 'text-green-400'
-                        }`}>
-                          {project.actual_cost > project.budget ? '+' : '-'}
-                          ₹{Math.abs(project.budget - project.actual_cost).toLocaleString('en-IN')}
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
           </div>
-        )}
 
-        {activeTab === 'timeline' && (
+          {/* Project Details */}
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-6">Project Activity</h3>
-            {activities.length === 0 ? (
-              <div className="text-center py-12">
-                <Clock className="w-16 h-16 text-zinc-700 mx-auto mb-4" />
-                <p className="text-zinc-400">No activity recorded yet</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {activities.map((activity, index) => (
-                  <div key={activity.id} className="flex">
-                    <div className="flex flex-col items-center mr-4">
-                      <div className="w-3 h-3 bg-yellow-600 rounded-full"></div>
-                      {index < activities.length - 1 && (
-                        <div className="w-0.5 h-full bg-zinc-800 mt-2"></div>
-                      )}
-                    </div>
-                    <div className="flex-1 pb-6">
-                      <div className="flex items-start justify-between mb-1">
-                        <div className="text-white font-medium">{activity.action}</div>
-                        <div className="text-zinc-500 text-sm">{formatDateTime(activity.created_at)}</div>
-                      </div>
-                      {activity.details && (
-                        <div className="text-zinc-400 text-sm mb-2">{activity.details}</div>
-                      )}
-                      {activity.user_profiles && (
-                        <div className="text-zinc-500 text-xs">
-                          by {activity.user_profiles.full_name}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'quotations' && (
-          <div className="space-y-6">
-            {quotations.length === 0 ? (
-              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-12 text-center">
-                <FileText className="w-16 h-16 text-zinc-700 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-white mb-2">No Quotations</h3>
-                <p className="text-zinc-400">No quotations have been created for this project yet.</p>
-              </div>
-            ) : (
-              quotations.map((quotation) => (
-                <div key={quotation.id} className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-zinc-700 transition-all">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <h4 className="text-xl font-semibold text-white">{quotation.title}</h4>
-                        <span className={`px-3 py-1 rounded text-xs border ${getQuotationStatusColor(quotation.status)}`}>
-                          {quotation.status.toUpperCase()}
-                        </span>
-                      </div>
-                      <div className="text-sm text-zinc-400">
-                        {quotation.quotation_number} • {formatDate(quotation.created_at)}
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-4 ml-6">
-                      <div className="text-right">
-                        <div className="text-2xl font-bold text-yellow-600">
-                          ₹{quotation.total_amount.toLocaleString('en-IN')}
-                        </div>
-                        <div className="text-xs text-zinc-500">Total Amount</div>
-                      </div>
-                      <Link
-                        href={`/client/quotations/${quotation.id}`}
-                        className="glass-button flex items-center space-x-2 px-4 py-2"
-                      >
-                        <Eye className="w-4 h-4" />
-                        <span>View</span>
-                      </Link>
-                    </div>
+            <h2 className="text-xl font-semibold text-white mb-6 flex items-center">
+              <Building className="w-5 h-5 mr-2 text-yellow-600" />
+              Project Details
+            </h2>
+            
+            <div className="grid md:grid-cols-2 gap-6">
+              {project.site_location && (
+                <div className="md:col-span-2">
+                  <label className="text-sm text-zinc-500 mb-1 block">Site Location</label>
+                  <div className="text-white flex items-start">
+                    <MapPin className="w-4 h-4 mr-2 mt-1 flex-shrink-0 text-yellow-600" />
+                    <p>{project.site_location}</p>
                   </div>
                 </div>
-              ))
+              )}
+              
+              {project.area_sqft && (
+                <div>
+                  <label className="text-sm text-zinc-500 mb-1 block">Area</label>
+                  <div className="text-white flex items-center">
+                    <Ruler className="w-4 h-4 mr-2 text-yellow-600" />
+                    <p>{project.area_sqft.toLocaleString('en-IN')} sq.ft</p>
+                  </div>
+                </div>
+              )}
+              
+              {project.budget && (
+                <div>
+                  <label className="text-sm text-zinc-500 mb-1 block">Budget</label>
+                  <div className="text-white flex items-center">
+                    <DollarSign className="w-4 h-4 mr-2 text-yellow-600" />
+                    <p>₹{project.budget.toLocaleString('en-IN')}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {project.notes && (
+              <div className="mt-6 pt-6 border-t border-zinc-800">
+                <label className="text-sm text-zinc-500 mb-2 block">Notes</label>
+                <p className="text-zinc-300 whitespace-pre-wrap">{project.notes}</p>
+              </div>
             )}
           </div>
-        )}
+        </div>
 
-        {activeTab === 'documents' && (
-          <div>
-            <DocumentUpload 
-              projectId={projectId}
-              onUploadComplete={() => {
-                // Optionally refresh documents or show notification
-              }}
-            />
+        {/* Timeline & Stats */}
+        <div className="space-y-6">
+          {/* Timeline */}
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+              <Calendar className="w-5 h-5 mr-2 text-yellow-600" />
+              Timeline
+            </h3>
+            
+            <div className="space-y-4">
+              {project.start_date && (
+                <div>
+                  <label className="text-sm text-zinc-500 mb-1 block">Start Date</label>
+                  <p className="text-white">
+                    {new Date(project.start_date).toLocaleDateString('en-IN', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </p>
+                </div>
+              )}
+              
+              {project.timeline_days && (
+                <div>
+                  <label className="text-sm text-zinc-500 mb-1 block">Duration</label>
+                  <p className="text-white">{project.timeline_days} days</p>
+                </div>
+              )}
+              
+              {endDate && (
+                <div>
+                  <label className="text-sm text-zinc-500 mb-1 block">Expected Completion</label>
+                  <p className="text-white">
+                    {endDate.toLocaleDateString('en-IN', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </p>
+                </div>
+              )}
+              
+              {!project.start_date && !project.timeline_days && (
+                <p className="text-zinc-500 text-sm">No timeline set</p>
+              )}
+            </div>
+          </div>
+
+          {/* Quick Stats */}
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+            <div className="flex items-center justify-between mb-2">
+              <FileText className="w-8 h-8 text-yellow-600" />
+              <span className="text-3xl font-bold text-white">{quotations.length}</span>
+            </div>
+            <p className="text-zinc-400">Quotations</p>
+          </div>
+
+          {quotations.filter(q => q.status === 'approved').length > 0 && (
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+              <div className="flex items-center justify-between mb-2">
+                <DollarSign className="w-8 h-8 text-green-600" />
+                <span className="text-2xl font-bold text-white">
+                  ₹{quotations
+                    .filter(q => q.status === 'approved')
+                    .reduce((sum, q) => sum + q.total_amount, 0)
+                    .toLocaleString('en-IN')}
+                </span>
+              </div>
+              <p className="text-zinc-400">Approved Value</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Quotations Section */}
+      <div>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-white flex items-center">
+            <FileText className="w-6 h-6 mr-2 text-yellow-600" />
+            Quotations ({quotations.length})
+          </h2>
+          <Link
+            href={`/admin/quotations/new?project=${projectId}`}
+            className="flex items-center space-x-2 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-all"
+          >
+            <Plus className="w-4 h-4" />
+            <span>New Quotation</span>
+          </Link>
+        </div>
+
+        {quotations.length === 0 ? (
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-12 text-center">
+            <FileText className="w-16 h-16 text-zinc-700 mx-auto mb-4" />
+            <p className="text-zinc-400 mb-4">No quotations yet</p>
+            <Link
+              href={`/admin/quotations/new?project=${projectId}`}
+              className="inline-flex items-center space-x-2 text-yellow-600 hover:text-yellow-500"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Create first quotation</span>
+            </Link>
+          </div>
+        ) : (
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-zinc-800/50">
+                <tr>
+                  <th className="text-left px-6 py-4 text-sm font-medium text-zinc-300">Quotation</th>
+                  <th className="text-right px-6 py-4 text-sm font-medium text-zinc-300">Amount</th>
+                  <th className="text-center px-6 py-4 text-sm font-medium text-zinc-300">Status</th>
+                  <th className="text-center px-6 py-4 text-sm font-medium text-zinc-300">Date</th>
+                  <th className="text-center px-6 py-4 text-sm font-medium text-zinc-300">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-800">
+                {quotations.map((quotation) => {
+                  const subtotal = quotation.total_amount
+                  const discount = quotation.discount || 0
+                  const afterDiscount = subtotal - discount
+                  const tax = (quotation.tax_percent || 0) / 100 * afterDiscount
+                  const total = afterDiscount + tax
+
+                  return (
+                    <tr key={quotation.id} className="hover:bg-zinc-800/30 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="text-white font-medium">{quotation.title}</div>
+                        <div className="text-xs text-zinc-500">Version {quotation.version}</div>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="text-white font-medium">₹{total.toLocaleString('en-IN')}</div>
+                        {quotation.tax_percent && (
+                          <div className="text-xs text-zinc-500">incl. {quotation.tax_percent}% tax</div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex justify-center">
+                          <span className={`px-3 py-1 rounded text-xs border ${getStatusColor(quotation.status)}`}>
+                            {quotation.status.toUpperCase()}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-center text-zinc-400 text-sm">
+                        {new Date(quotation.created_at).toLocaleDateString('en-IN')}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center justify-center">
+                          <Link
+                            href={`/admin/quotations/${quotation.id}`}
+                            className="text-yellow-600 hover:text-yellow-500 text-sm"
+                          >
+                            View
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           </div>
         )}
-      </main>
+      </div>
     </div>
   )
 }
