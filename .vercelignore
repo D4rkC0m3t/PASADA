@@ -1,7 +1,7 @@
 # Temporarily ignore PDF generation routes during build
-app/api/quotations/[id]/pdf-gst/
-app/api/estimations/[id]/pdf/
-app/api/invoices/[id]/pdf/
+app/api/quotations/
+app/api/estimations/
+app/api/invoices/
 
 # Temporarily ignore problematic client pages
-app/client/projects/[id]/
+app/client/projects/
