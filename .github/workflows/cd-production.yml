@@ -1,0 +1,149 @@
+name: CD - Production Deployment
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+jobs:
+  # ==========================================
+  # Deploy to Vercel Production
+  # ==========================================
+  deploy-vercel:
+    name: Deploy to Vercel
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+        
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          
+      - name: Build Project Artifacts
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          
+      - name: Deploy to Vercel Production
+        id: deploy
+        run: |
+          DEPLOYMENT_URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          echo "deployment_url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          
+      - name: Comment deployment URL on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '🚀 Deployed to production: ${{ steps.deploy.outputs.deployment_url }}'
+            })
+
+  # ==========================================
+  # Database Migrations (if needed)
+  # ==========================================
+  migrate-database:
+    name: Run Database Migrations
+    runs-on: ubuntu-latest
+    needs: deploy-vercel
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+          
+      - name: Run migrations
+        run: |
+          supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_ID }}
+          supabase db push
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+
+  # ==========================================
+  # Post-Deployment Health Check
+  # ==========================================
+  health-check:
+    name: Health Check
+    runs-on: ubuntu-latest
+    needs: deploy-vercel
+    
+    steps:
+      - name: Wait for deployment
+        run: sleep 30
+        
+      - name: Check application health
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" ${{ secrets.PRODUCTION_URL }})
+          if [ $response -eq 200 ]; then
+            echo "✅ Application is healthy"
+          else
+            echo "❌ Application health check failed with status: $response"
+            exit 1
+          fi
+          
+      - name: Check API endpoints
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" ${{ secrets.PRODUCTION_URL }}/api/health)
+          if [ $response -eq 200 ]; then
+            echo "✅ API is healthy"
+          else
+            echo "⚠️ API health check returned: $response"
+          fi
+
+  # ==========================================
+  # Notify Deployment Status
+  # ==========================================
+  notify:
+    name: Send Notifications
+    runs-on: ubuntu-latest
+    needs: [deploy-vercel, health-check]
+    if: always()
+    
+    steps:
+      - name: Deployment Success Notification
+        if: needs.deploy-vercel.result == 'success' && needs.health-check.result == 'success'
+        run: |
+          echo "✅ Deployment successful!"
+          # Add Slack/Discord/Email notification here
+          
+      - name: Deployment Failure Notification
+        if: needs.deploy-vercel.result == 'failure' || needs.health-check.result == 'failure'
+        run: |
+          echo "❌ Deployment failed!"
+          # Add Slack/Discord/Email notification here

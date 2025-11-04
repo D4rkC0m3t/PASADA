@@ -135,6 +135,9 @@ const nextConfig = {
   // Output configuration for static export (if needed)
   // output: 'export',
 
+  // Output standalone for Docker deployment
+  output: 'standalone',
+
   // Trailing slash
   trailingSlash: false,
 };
