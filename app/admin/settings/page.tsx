@@ -18,11 +18,11 @@ export default function SettingsPage() {
     companyName: 'PASADA Interior Design',
     businessType: 'Interior Design & Furniture',
     email: 'pasada.groups@gmail.com',
-    phone: '+40 (123) 456-7890',
-    address: 'Bucharest, Romania',
+    phone: '+91 709004948',
+    address: 'Bengaluru India',
     website: 'https://pasada.in',
-    taxId: 'RO12345678',
-    registrationNumber: 'J40/1234/2024'
+    taxId: '',
+    registrationNumber: ''
   })
 
   const [profileSettings, setProfileSettings] = useState({
@@ -32,7 +32,7 @@ export default function SettingsPage() {
     phone: '',
     role: '',
     language: 'en',
-    timezone: 'Europe/Bucharest'
+    timezone: 'Asia/Kolkata'
   })
 
   const [notificationSettings, setNotificationSettings] = useState({
@@ -74,7 +74,7 @@ export default function SettingsPage() {
           phone: profile.phone || '',
           role: profile.role || '',
           language: 'en',
-          timezone: 'Europe/Bucharest'
+          timezone: 'Asia/Kolkata'
         })
       }
     } catch (error) {
@@ -324,9 +324,10 @@ export default function SettingsPage() {
                     onChange={(e) => setProfileSettings({ ...profileSettings, timezone: e.target.value })}
                     className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-yellow-600"
                   >
-                    <option value="Europe/Bucharest">Europe/Bucharest (GMT+2)</option>
-                    <option value="Europe/London">Europe/London (GMT+0)</option>
-                    <option value="America/New_York">America/New York (GMT-5)</option>
+                    <option value="Asia/Kolkata">Asia/Kolkata (IST, GMT+5:30)</option>
+                    <option value="Asia/Mumbai">Asia/Mumbai (IST, GMT+5:30)</option>
+                    <option value="Asia/Delhi">Asia/Delhi (IST, GMT+5:30)</option>
+                    <option value="Asia/Bangalore">Asia/Bangalore (IST, GMT+5:30)</option>
                   </select>
                 </div>
               </div>
