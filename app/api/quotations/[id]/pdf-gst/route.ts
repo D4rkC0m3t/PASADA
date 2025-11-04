@@ -121,7 +121,7 @@ export async function GET(
     }
 
     // Generate PDF
-    const pdfDoc = <GSTQuotationPDF data={pdfData as any} />
+    const pdfDoc = React.createElement(GSTQuotationPDF, { data: pdfData as any })
     const stream = await renderToStream(pdfDoc)
 
     // Convert stream to buffer

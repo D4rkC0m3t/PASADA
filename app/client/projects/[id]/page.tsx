@@ -10,7 +10,6 @@ import {
 } from 'lucide-react'
 import { createBrowserClient } from '@/lib/supabase/client'
 import DocumentUpload from '@/components/DocumentUpload'
-import DocumentUpload from '@/components/DocumentUpload'
 
 interface Project {
   id: string

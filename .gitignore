@@ -73,3 +73,5 @@ logs
 # Database dumps
 *.sql.gz
 *.dump
+
+.vercel
