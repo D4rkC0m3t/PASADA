@@ -75,7 +75,7 @@ const QuotationCard = ({ quotation }: { quotation: Quotation }) => (
       </div>
     </div>
     <div className="flex justify-between items-center">
-      <span className="text-xl font-bold text-[#fff8f1]">₹{(quotation.total_amount || 0).toLocaleString('en-IN')}</span>
+      <span className="text-xl font-bold text-[#fff8f1]">Γé╣{(quotation.total_amount || 0).toLocaleString('en-IN')}</span>
       <Link href={`/client/quotations/${quotation.id}`} className="text-gold-400 text-sm hover:underline hover:text-gold-300">
         View Details
       </Link>
@@ -132,7 +132,7 @@ export default function ClientDashboardPage() {
       setLoading(true)
       setError(null)
       
-      // ✅ SECURE: Get current user
+      // Γ£à SECURE: Get current user
       const { data: { user }, error: userError } = await supabase.auth.getUser()
       if (userError) throw userError
       if (!user) {
@@ -140,7 +140,7 @@ export default function ClientDashboardPage() {
         return
       }
 
-      // ✅ SECURE: Get user profile with client_id
+      // Γ£à SECURE: Get user profile with client_id
       const { data: profile, error: profileError } = await supabase
         .from('user_profiles')
         .select('client_id, role')
@@ -164,7 +164,7 @@ export default function ClientDashboardPage() {
         return
       }
 
-      // ✅ SECURE: Fetch projects - RLS will ensure only client's projects are returned
+      // Γ£à SECURE: Fetch projects - RLS will ensure only client's projects are returned
       const { data: projectsData, error: projectsError } = await supabase
         .from('projects')
         .select('id, name, status, budget, start_date, completion_percentage, type')
@@ -177,7 +177,7 @@ export default function ClientDashboardPage() {
         throw projectsError
       }
 
-      // ✅ SECURE: Fetch quotations - RLS will ensure only client's quotations are returned
+      // Γ£à SECURE: Fetch quotations - RLS will ensure only client's quotations are returned
       const { data: quotationsData, error: quotationsError } = await supabase
         .from('quotations')
         .select('id, quotation_number, title, total_amount, status')
@@ -190,7 +190,7 @@ export default function ClientDashboardPage() {
         throw quotationsError
       }
 
-      // ✅ SECURE: Fetch bookings - RLS will ensure only client's bookings are returned
+      // Γ£à SECURE: Fetch bookings - RLS will ensure only client's bookings are returned
       const { data: bookingsData, error: bookingsError } = await supabase
         .from('bookings')
         .select('id, title, scheduled_date, scheduled_time, booking_type')
