@@ -107,20 +107,20 @@ export default function HomePage() {
 
       {/* Main Content Container */}
       <div 
-        className="relative z-10 flex flex-col items-center justify-center w-full"
-        style={{ gap: '32px', maxWidth: '1400px', padding: '0 20px' }}
+        className="relative z-10 flex flex-col items-center justify-center w-full px-4 md:px-8 lg:px-20"
+        style={{ gap: '20px', maxWidth: '1400px' }}
       >
         {/* 1. Welcome to - Premium typography with typewriter */}
         <div className="text-center animate-fadeUp" style={{ animationDelay: '0.3s', opacity: 0 }}>
           <p 
-            className="text-3xl md:text-4xl lg:text-5xl font-light tracking-wide" 
+            className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light tracking-wide" 
             style={{ 
               fontFamily: "'Playfair Display', 'Cormorant Garamond', 'Cinzel', serif",
               color: '#ffffff',
               textShadow: '0 2px 6px rgba(255, 255, 255, 0.2)',
               letterSpacing: '0.2em',
               lineHeight: '1.3',
-              minHeight: '5rem',
+              minHeight: '3rem',
               whiteSpace: 'pre-line'
             }}
           >
@@ -130,7 +130,7 @@ export default function HomePage() {
         </div>
 
         {/* 2. PASADA - Fluid Text */}
-        <div className="animate-fadeUp" style={{ width: '100%', maxWidth: '1200px', animationDelay: '0.6s', opacity: 0 }}>
+        <div className="animate-fadeUp w-full max-w-[95vw] md:max-w-[90vw] lg:max-w-[1200px]" style={{ animationDelay: '0.6s', opacity: 0 }}>
           <FluidText />
         </div>
 
@@ -145,7 +145,7 @@ export default function HomePage() {
           }}
         >
           <p 
-            className="text-2xl md:text-3xl lg:text-4xl font-light" 
+            className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-light" 
             style={{ 
               fontFamily: "'Poppins', 'Inter', 'Outfit', sans-serif",
               color: '#ffffff',
@@ -169,28 +169,28 @@ export default function HomePage() {
           }}
         >
           <p 
-            className="text-xl md:text-2xl lg:text-3xl font-light italic leading-relaxed mb-4 px-4" 
+            className="text-base sm:text-lg md:text-xl lg:text-2xl font-light italic leading-relaxed mb-4 px-4" 
             style={{ 
               fontFamily: "'Playfair Display', 'Cormorant Garamond', 'Georgia', serif",
               color: '#ffffff',
               opacity: 0.9,
               textShadow: '0 2px 6px rgba(255, 255, 255, 0.2)',
               letterSpacing: '0.02em',
-              minHeight: '4rem'
+              minHeight: '2.5rem'
             }}
           >
             {quoteText}
             {quoteOpacity > 0 && quoteText.length < fullQuoteText.length && <span className="typewriter-cursor">|</span>}
           </p>
           <p 
-            className="text-base md:text-lg font-medium tracking-wider"
+            className="text-sm sm:text-base md:text-lg font-medium tracking-wider"
             style={{ 
               fontFamily: "'Cinzel', 'Playfair Display', serif",
               color: '#ffffff',
               opacity: 0.85,
               textShadow: '0 2px 4px rgba(255, 255, 255, 0.15)',
               letterSpacing: '0.1em',
-              minHeight: '2rem'
+              minHeight: '1.5rem'
             }}
           >
             {authorText}
@@ -199,9 +199,9 @@ export default function HomePage() {
         </div>
 
         {/* 5. Get Started Button - Shimmer effect */}
-        <div className="animate-fadeUp" style={{ marginTop: '60px', animationDelay: '1.5s', opacity: 0 }}>
+        <div className="animate-fadeUp mt-8 sm:mt-12 md:mt-16" style={{ animationDelay: '1.5s', opacity: 0 }}>
           <button 
-            className="shimmer-button"
+            className="shimmer-button text-sm sm:text-base"
             onClick={() => router.push('/pasada.design/en/homepage.html')}
           >
             <span className="text">Get Started</span>

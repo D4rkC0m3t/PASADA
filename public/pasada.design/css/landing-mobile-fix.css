@@ -1,0 +1,252 @@
+/* ============================================================================
+   Landing Page Mobile Responsive Fixes
+   ============================================================================
+   Description: Ensures proper mobile viewport and display for landing page
+   Author: Arjun @ Phoenix
+   Date: 2025-11-05
+   Version: 1.0.0
+   ============================================================================ */
+
+/* 
+   Mobile-Specific Fixes for Landing Page
+   Ensures content fits properly on small screens
+*/
+
+/* Ensure proper viewport scaling */
+@media (max-width: 767px) {
+  /* Main container adjustments */
+  .fixed.inset-0 {
+    width: 100vw !important;
+    height: 100vh !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+  }
+
+  /* Welcome text sizing */
+  .text-3xl {
+    font-size: 1.5rem !important;  /* Reduced from 1.875rem */
+    line-height: 2rem !important;
+  }
+
+  /* PASADA fluid text container */
+  div[style*="maxWidth: '1200px'"] {
+    max-width: 100% !important;
+    padding: 0 10px !important;
+  }
+
+  /* Tagline text sizing */
+  .text-2xl {
+    font-size: 1.25rem !important;  /* Reduced from 1.5rem */
+    line-height: 1.75rem !important;
+  }
+
+  /* Quote text sizing */
+  .text-xl {
+    font-size: 1rem !important;  /* Reduced from 1.25rem */
+    line-height: 1.5rem !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  /* Author text sizing */
+  .text-base {
+    font-size: 0.875rem !important;  /* Reduced from 1rem */
+  }
+
+  /* Button sizing */
+  .shimmer-button {
+    font-size: 0.875rem !important;
+    padding: 0.6em 1.2em !important;
+    transform: scale(0.9) !important;
+  }
+
+  /* Reduce vertical spacing */
+  div[style*="gap: '32px'"] {
+    gap: 20px !important;
+  }
+
+  div[style*="marginTop: '40px'"] {
+    margin-top: 24px !important;
+  }
+
+  div[style*="marginTop: '60px'"] {
+    margin-top: 30px !important;
+  }
+
+  /* Reduce minimum heights */
+  p[style*="minHeight: '5rem'"] {
+    min-height: 3rem !important;
+  }
+
+  p[style*="minHeight: '4rem'"] {
+    min-height: 2.5rem !important;
+  }
+
+  p[style*="minHeight: '2rem'"] {
+    min-height: 1.5rem !important;
+  }
+}
+
+/* Mobile portrait (very small screens) */
+@media (max-width: 479px) {
+  /* Welcome text - even smaller */
+  .text-3xl {
+    font-size: 1.25rem !important;
+    line-height: 1.75rem !important;
+  }
+
+  /* Tagline */
+  .text-2xl {
+    font-size: 1.125rem !important;
+    line-height: 1.5rem !important;
+  }
+
+  /* Quote */
+  .text-xl {
+    font-size: 0.875rem !important;
+    line-height: 1.25rem !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  /* Author */
+  .text-base {
+    font-size: 0.75rem !important;
+  }
+
+  /* Button */
+  .shimmer-button {
+    font-size: 0.75rem !important;
+    padding: 0.5em 1em !important;
+    transform: scale(0.85) !important;
+  }
+
+  /* Reduce spacing more */
+  div[style*="gap: '32px'"] {
+    gap: 16px !important;
+  }
+
+  div[style*="marginTop: '40px'"] {
+    margin-top: 16px !important;
+  }
+
+  div[style*="marginTop: '60px'"] {
+    margin-top: 24px !important;
+  }
+
+  /* Content padding */
+  div[style*="padding: '0 20px'"] {
+    padding: 0 12px !important;
+  }
+}
+
+/* 
+   Landscape mobile orientation
+*/
+@media (max-width: 767px) and (orientation: landscape) {
+  .fixed.inset-0 {
+    overflow-y: auto !important;
+  }
+
+  /* Reduce all text sizes for landscape */
+  .text-3xl {
+    font-size: 1.125rem !important;
+  }
+
+  .text-2xl {
+    font-size: 1rem !important;
+  }
+
+  .text-xl {
+    font-size: 0.875rem !important;
+  }
+
+  /* Reduce vertical gaps */
+  div[style*="gap: '32px'"] {
+    gap: 12px !important;
+  }
+
+  div[style*="marginTop: '40px'"],
+  div[style*="marginTop: '60px'"] {
+    margin-top: 12px !important;
+  }
+}
+
+/* 
+   Fix for FluidText component on mobile
+*/
+@media (max-width: 767px) {
+  /* Target the FluidText container */
+  .fluid-text-container {
+    width: 95% !important;
+    max-width: 95vw !important;
+    height: clamp(80px, 20vw, 150px) !important;
+    margin: 0 auto !important;
+  }
+
+  /* Target the FluidText SVG or canvas if it exists */
+  canvas,
+  svg {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+}
+
+/* Mobile portrait - even smaller */
+@media (max-width: 479px) {
+  .fluid-text-container {
+    width: 90% !important;
+    max-width: 90vw !important;
+    height: clamp(60px, 18vw, 100px) !important;
+  }
+}
+
+/* 
+   Prevent text overflow
+*/
+@media (max-width: 767px) {
+  p {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+}
+
+/* 
+   Safe area insets for notched devices
+*/
+@supports (padding: max(0px)) {
+  @media (max-width: 767px) {
+    .fixed.inset-0 {
+      padding-left: max(10px, env(safe-area-inset-left));
+      padding-right: max(10px, env(safe-area-inset-right));
+      padding-top: max(10px, env(safe-area-inset-top));
+      padding-bottom: max(10px, env(safe-area-inset-bottom));
+    }
+  }
+}
+
+/* 
+   Performance optimization for mobile
+*/
+@media (max-width: 767px) {
+  /* Reduce animation complexity on mobile */
+  @keyframes gridMove {
+    from { background-position: 0 0; }
+    to { background-position: 40px 40px; }  /* Reduced from 80px */
+  }
+
+  .animate-gridMove {
+    background-size: 40px 40px !important;  /* Reduced from 80px */
+    animation-duration: 20s !important;  /* Faster animation */
+  }
+
+  /* Simplify shimmer animations on mobile */
+  .shimmer-button:hover {
+    scale: 1.1 !important;  /* Reduced from 1.2 */
+  }
+}
+
+/* ============================================================================
+   End of Landing Page Mobile Fixes
+   ============================================================================ */

@@ -1,0 +1,352 @@
+/* ============================================================================
+   Mobile Responsive Fixes
+   ============================================================================
+   Description: Ensures proper mobile viewport and display
+   Author: Arjun @ Phoenix
+   Date: 2025-11-05
+   Version: 1.0.0
+   ============================================================================ */
+
+/* 
+   Viewport and Layout Fixes
+   Prevents horizontal scrolling and ensures proper scaling
+*/
+
+/* Ensure body doesn't overflow on mobile */
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Fix for iOS Safari viewport issues */
+@supports (-webkit-touch-callout: none) {
+  body {
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* Prevent text size adjustment on orientation change */
+html {
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* 
+   Mobile-Specific Container Fixes
+   Ensures containers don't exceed viewport width
+*/
+
+.page-wrapper,
+.container-large,
+.container-medium,
+.container-small {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* 
+   Mobile Navigation Fixes
+   Ensures proper display of language toggle and menu
+*/
+
+@media (max-width: 767px) {
+  /* Language toggle mobile positioning */
+  .language-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+  
+  .language-wrapper a {
+    white-space: nowrap;
+    font-size: 14px;
+    padding: 4px 8px;
+  }
+  
+  /* Mobile menu improvements */
+  .navbar1_menu {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+  
+  /* Fix mobile hamburger menu */
+  .navbar1_menu-button {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* 
+   Mobile Portrait Specific Fixes
+*/
+
+@media (max-width: 479px) {
+  /* Ensure all content respects viewport */
+  * {
+    max-width: 100%;
+  }
+  
+  /* Fix for large titles on mobile */
+  .heading-style-h1,
+  .heading-style-h2,
+  .custom-h1 {
+    font-size: clamp(2rem, 8vw, 3rem) !important;
+    line-height: 1.2 !important;
+  }
+  
+  /* Ensure images don't overflow */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+  
+  /* Fix button sizing on mobile */
+  .button-group {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  
+  .button {
+    min-width: auto;
+    white-space: nowrap;
+  }
+}
+
+/* 
+   Language Notification Mobile Fixes
+   Ensures notification doesn't cause layout issues
+*/
+
+#pasada-lang-notification {
+  /* Override inline styles for mobile */
+  max-width: calc(100vw - 40px) !important;
+  right: 20px !important;
+  left: 20px !important;
+  top: 60px !important;
+}
+
+@media (max-width: 767px) {
+  #pasada-lang-notification {
+    top: 70px !important;
+    font-size: 13px !important;
+    padding: 12px 16px !important;
+  }
+}
+
+@media (max-width: 479px) {
+  #pasada-lang-notification {
+    top: 60px !important;
+    font-size: 12px !important;
+    padding: 10px 14px !important;
+    left: 10px !important;
+    right: 10px !important;
+    max-width: calc(100vw - 20px) !important;
+  }
+  
+  #pasada-lang-notification svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+}
+
+/* 
+   Touch Target Improvements
+   Ensures links and buttons are easy to tap on mobile
+*/
+
+@media (max-width: 767px) {
+  a, button, .w-button, .navbar1_link {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Language toggle touch targets */
+  .language-wrapper a {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* 
+   Hero Section Mobile Fixes
+   Ensures hero section displays properly on mobile
+*/
+
+@media (max-width: 767px) {
+  .section_hero {
+    min-height: auto !important;
+  }
+  
+  .header_component {
+    height: auto !important;
+    min-height: 100vh;
+  }
+  
+  .header_content {
+    position: relative !important;
+    top: auto !important;
+  }
+}
+
+/* 
+   Footer Mobile Fixes
+   Ensures footer content wraps properly
+*/
+
+@media (max-width: 767px) {
+  .footer_component {
+    overflow-x: hidden;
+  }
+  
+  .footer_link {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+}
+
+/* 
+   Prevent Zoom on Input Focus (iOS Safari)
+   Keeps page at proper scale when focusing inputs
+*/
+
+@media (max-width: 767px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="number"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* 
+   Fix for Landscape Mobile
+   Ensures proper display when device is rotated
+*/
+
+@media (max-width: 767px) and (orientation: landscape) {
+  .header_component {
+    min-height: 100vh;
+  }
+  
+  .navbar1_component {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+}
+
+/* 
+   Smooth Scrolling on Mobile
+   Improves scroll performance
+*/
+
+@media (max-width: 767px) {
+  html {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  body {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* 
+   Safe Area Insets for Notched Devices
+   Ensures content doesn't hide behind notch or home indicator
+*/
+
+@supports (padding: max(0px)) {
+  body {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+  }
+  
+  .navbar1_component {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+  }
+  
+  .footer_component {
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+}
+
+/* 
+   Prevent Pull-to-Refresh on Chrome Mobile
+   Improves user experience on Android
+*/
+
+body {
+  overscroll-behavior-y: contain;
+}
+
+/* 
+   Fix for Mobile Video Display
+*/
+
+@media (max-width: 767px) {
+  video {
+    max-width: 100%;
+    height: auto;
+    object-fit: cover;
+  }
+  
+  .header_lightbox-image video {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+/* 
+   Critical Mobile Layout Fix
+   Ensures proper initial page load
+*/
+
+@media (max-width: 767px) {
+  /* Prevent horizontal scroll caused by animations */
+  .w-richtext,
+  .padding-global,
+  .container-large {
+    overflow-x: hidden !important;
+  }
+  
+  /* Ensure sections don't cause overflow */
+  section,
+  .section_hero,
+  .section_navbar,
+  .section_footer {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+  }
+}
+
+/* 
+   Performance Optimization for Mobile
+*/
+
+@media (max-width: 767px) {
+  /* Reduce animation complexity on mobile */
+  * {
+    animation-duration: 0.3s !important;
+  }
+  
+  /* Optimize transforms for mobile */
+  .layout_card,
+  .project-layout_card {
+    will-change: auto;
+  }
+}
+
+/* ============================================================================
+   End of Mobile Responsive Fixes
+   ============================================================================ */

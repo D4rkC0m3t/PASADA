@@ -10,6 +10,7 @@
 
 :root {
   --pasada-gold: #D4AF37;
+  --gold: #D1A954; /* PASADA CRM Gold */
   --pasada-dark: #1a1a1a;
   --pasada-light: #f8f8f8;
   --pasada-accent: #8B7355;
@@ -33,6 +34,68 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  :root {
+    --radius: 0.65rem;
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.145 0 0);
+    --primary: oklch(0.205 0 0);
+    --primary-foreground: oklch(0.985 0 0);
+    --secondary: oklch(0.97 0 0);
+    --secondary-foreground: oklch(0.205 0 0);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    --accent: oklch(0.97 0 0);
+    --accent-foreground: oklch(0.205 0 0);
+    --destructive: oklch(0.577 0.245 27.325);
+    --border: oklch(0.922 0 0);
+    --input: oklch(0.922 0 0);
+    --ring: oklch(0.708 0 0);
+    --chart-1: oklch(0.646 0.222 41.116);
+    --chart-2: oklch(0.6 0.118 184.704);
+    --chart-3: oklch(0.398 0.07 227.392);
+    --chart-4: oklch(0.828 0.189 84.429);
+    --chart-5: oklch(0.769 0.188 70.08);
+    --sidebar: oklch(0.985 0 0);
+    --sidebar-foreground: oklch(0.145 0 0);
+    --sidebar-primary: oklch(0.205 0 0);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.97 0 0);
+    --sidebar-accent-foreground: oklch(0.205 0 0);
+    --sidebar-border: oklch(0.922 0 0);
+    --sidebar-ring: oklch(0.708 0 0);
+  }
+  
+  .dark {
+    /* Exact shadcn dark theme colors from screenshot */
+    --background: 0 0% 3.9%;           /* Very dark background #0a0a0a */
+    --foreground: 0 0% 98%;             /* Off-white text #fafafa */
+    --card: 0 0% 8%;                    /* Card background #141414 */
+    --card-foreground: 0 0% 98%;        /* Card text */
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;            /* Slightly lighter #262626 */
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;     /* Medium gray #a3a3a3 */
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;               /* Subtle border */
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
   }
 }
 
@@ -198,3 +261,36 @@ html {
 .notification-pulse {
   animation: pulse-glow 2s ease-in-out infinite;
 }
+
+/* CRM Portal Enhancements */
+/* Custom color class for convenience */
+.text-gold { color: var(--gold); }
+.bg-gold { background-color: var(--gold); }
+
+/* Glass utility */
+.glass {
+  background: rgba(16, 16, 16, 0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.04);
+}
+
+/* Soft animated background (subtle) */
+.animated-bg {
+  background: radial-gradient(800px 400px at 10% 10%, rgba(209,169,84,0.06), transparent 8%),
+              radial-gradient(600px 300px at 90% 85%, rgba(80,120,130,0.02), transparent 10%),
+              linear-gradient(180deg, rgba(8,8,8,1) 0%, rgba(22,22,22,1) 100%);
+  animation: bg-pulse 8s ease-in-out infinite;
+  filter: blur(20px);
+  transform: scale(1.04);
+}
+
+/* Subtle pulse movement */
+@keyframes bg-pulse {
+  0% { transform: translateY(0) scale(1.04); opacity: 1; }
+  50% { transform: translateY(-6px) scale(1.045); opacity: 0.96; }
+  100% { transform: translateY(0) scale(1.04); opacity: 1; }
+}
+
+/* Small tweaks for navbar fixed spacing */
+main { padding-top: 96px; }

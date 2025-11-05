@@ -260,7 +260,7 @@ export const QuotationEmail: React.FC<QuotationEmailProps> = ({
           <div className="footer">
             <p className="footer-text">
               <strong>PASADA INTERIORS</strong><br />
-              Email: <a href="mailto:contact@pasada.in" className="footer-link">contact@pasada.in</a><br />
+              Email: <a href="mailto:support@pasada.in" className="footer-link">support@pasada.in</a><br />
               Phone: <a href="tel:+919876543210" className="footer-link">+91 98765 43210</a><br />
               Website: <a href="https://www.pasada.in" className="footer-link">www.pasada.in</a>
             </p>

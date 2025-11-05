@@ -141,6 +141,8 @@
             border-radius: 20px;
         }
     </style>
+    <link href="/pasada.design/css/hindi-font-support.css" rel="stylesheet" type="text/css" />
+    <link href="/pasada.design/css/mobile-responsive-fix.css" rel="stylesheet" type="text/css" />
 </head>
 
 <body class="background-color-black">
@@ -457,10 +459,10 @@ a,
             <div data-animation="default" class="navbar1_component w-nav" data-easing2="ease-out" fs-scrolldisable-element="smart-nav" data-easing="ease-in" data-collapse="medium" data-w-id="361d6bbc-c466-7fd1-86bf-e37a911f0fc3" role="banner" data-duration="400">
                 <div class="navbar1_container"><a href="/en/homepage" class="navbar1_logo-link w-nav-brand"><img src="/logo/pasada_logo-removebg-preview.png" alt="P A S A D A Interior Design Logo" style="height: 100px; width: auto; object-fit: contain;" class="navbar1_logo"/></a>
                     <div
-                        class="language-wrapper no-margin-responsive mobile-language"><a href="#" class="navbar1_link text-colour-xx w-nav-link">En</a><a href="/en/homepage" class="navbar1_link language-ro w-nav-link">Ro</a></div>
-                <nav role="navigation" class="navbar1_menu is-page-height-tablet w-nav-menu"><a href="/en/homepage" class="navbar1_link responsive-nav-links w-nav-link">Home</a><a href="/en/about" aria-current="page" class="navbar1_link responsive-nav-links w-nav-link w--current">About us</a><a href="#" class="navbar1_link responsive-nav-links hide w-nav-link">Services</a>
+                        class="language-wrapper no-margin-responsive mobile-language"><a href="#" class="navbar1_link text-colour-xx w-nav-link">En</a><a href="/en/homepage" class="navbar1_link language-hi w-nav-link">Hi</a></div>
+                <nav role="navigation" class="navbar1_menu is-page-height-tablet w-nav-menu"><a href="/en/homepage" class="navbar1_link responsive-nav-links w-nav-link" data-translate="navHome">Home</a><a href="/en/about" aria-current="page" class="navbar1_link responsive-nav-links w-nav-link w--current" data-translate="navAbout">About us</a><a href="#" class="navbar1_link responsive-nav-links hide w-nav-link" data-translate="navServices">Services</a>
                     <a
-                        href="/en/projects" class="navbar1_link link-mobile responsive-nav-links w-nav-link">projects</a>
+                        href="/en/projects" class="navbar1_link link-mobile responsive-nav-links w-nav-link" data-translate="navProjects">projects</a>
                         <div data-hover="true" data-delay="200" data-w-id="361d6bbc-c466-7fd1-86bf-e37a911f0fd5" class="navbar1_menu-dropdown hide w-dropdown">
                             <div class="navbar1_dropdown-toggle w-dropdown-toggle">
                                 <div class="dropdown-icon w-embed"><svg width=" 100%" height=" 100%" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -470,9 +472,16 @@ a,
                             </div>
                             <nav class="navbar1_dropdown-list w-dropdown-list"><a href="#" class="navbar1_dropdown-link w-dropdown-link">Link Five</a><a href="#" class="navbar1_dropdown-link w-dropdown-link">Link Six</a><a href="#" class="navbar1_dropdown-link w-dropdown-link">Link Seven</a></nav>
                         </div>
-                        <div class="button-group margin-left margin-xsmall no-margin-responsive nav-button-responsive"><a href="/admin/dashboard" class="button is-small is-icon w-inline-block" style="background: linear-gradient(90deg, #ca8a04, #b45309); margin-right: 8px; padding: 12px; min-width: auto;"><div class="button-icon" style="margin: 0;"><div class="icon-embed-xsmall w-embed"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div></div></a>
+                        <div class="button-group margin-left margin-xsmall no-margin-responsive nav-button-responsive">
+                            <a href="/login?type=client" class="button is-small is-icon is-alternate w-inline-block" style="margin-right: 8px;">
+                                <div><span>Client Login</span></div>
+                                <div class="button-icon">
+                                    <div class="icon-embed-xsmall w-embed"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--ic" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><path fill="currentColor" d="M16.01 11H4v2h12.01v3L20 12l-3.99-4v3z"></path></svg></div>
+                                    <div class="icon-embed-xsmall w-embed"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--ic" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><path fill="currentColor" d="M16.01 11H4v2h12.01v3L20 12l-3.99-4v3z"></path></svg></div>
+                                </div>
+                            </a>
                             <a data-w-id="361d6bbc-c466-7fd1-86bf-e37a911f0fe2" href="/en/contant-us" class="button is-small is-icon is-alternate w-inline-block">
-                                <div>Get In Touch</div>
+                                <div><span data-translate="navContact">Get In Touch</span></div>
                                 <div class="button-icon">
                                     <div class="icon-embed-xsmall w-embed"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--ic" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><path fill="currentColor" d="M16.01 11H4v2h12.01v3L20 12l-3.99-4v3z"></path></svg></div>
                                     <div
@@ -480,7 +489,7 @@ a,
                         </div>
                         </a>
             </div>
-            <div class="language-wrapper no-margin-responsive hide-tablet"><a href="/en/homepage" class="navbar1_link text-colour-xx w-nav-link">En</a><a href="/en/homepage" class="navbar1_link language-ro w-nav-link">Ro</a></div>
+            <div class="language-wrapper no-margin-responsive hide-tablet"><a href="/en/homepage" class="navbar1_link text-colour-xx w-nav-link">En</a><a href="/en/homepage" class="navbar1_link language-hi w-nav-link">Hi</a></div>
             </nav>
             <div class="navbar1_menu-button w-nav-button">
                 <div class="menu-icon1">
@@ -504,7 +513,7 @@ a,
                                     <h1 text-split="" letters-slide-down="" class="heading-style-h2 about-title">DISCOVER OUR tailored FURNITURE AND INTERIOR DESIGN SERVICES</h1>
                                 </div>
                                 <div class="about-hero-info-wrapper margin-top margin-large max-width-custom">
-                                    <p data-w-id="e81f58a1-d4ec-67a4-6fbc-a4acd4014e9a" style="opacity:0" class="text-size-medium max-width-xxsmall text-style-allcaps text-colour-grey text-weight-medium responsive-full-width margin-right margin-large">Furniture and design agency Based in Romania offering services worldwide</p>
+                                    <p data-w-id="e81f58a1-d4ec-67a4-6fbc-a4acd4014e9a" style="opacity:0" class="text-size-medium max-width-xxsmall text-style-allcaps text-colour-grey text-weight-medium responsive-full-width margin-right margin-large">Furniture and design agency Based in India offering services worldwide</p>
                                     <p data-w-id="41559140-6c8f-66d9-2277-80d465ce16d6" style="opacity:0" class="text-size-medium max-width-medium text-weight-light full-width-respomsive">Welcome to our interior design page, where we believe that every space has the potential to become a beautiful and functional living or business environment.</p>
                                 </div>
                             </div>
@@ -623,7 +632,7 @@ a,
                                                     attention to detail to provide a great end product that will last for many years. Contact us today and turn your home into a personalised and comfortable space!</p>
                                                 <div class="button-group margin-top margin-large">
                                                     <a data-w-id="2a8876ce-722d-9801-6624-9feca30371b8" href="/en/contant-us" class="button is-small is-icon is-alternate w-inline-block">
-                                                        <div>Get In Touch</div>
+                                                        <div><span data-translate="navContact">Get In Touch</span></div>
                                                         <div class="button-icon">
                                                             <div class="icon-embed-xsmall w-embed"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--ic" width="100%" height="100%" preserveAspectRatio="xMidYMid meet"
                                                                     viewBox="0 0 24 24"><path fill="currentColor" d="M16.01 11H4v2h12.01v3L20 12l-3.99-4v3z"></path></svg></div>
@@ -657,7 +666,7 @@ a,
                                                     style and needs. Whether you want a complete renovation or just a little refresh, we&#x27;re here to make your dream come true. Contact us today to start your dream project!</p>
                                                 <div class="button-group margin-top margin-large absolute-button">
                                                     <a data-w-id="2a8876ce-722d-9801-6624-9feca30371d2" href="/en/contant-us" class="button is-small is-icon is-alternate w-inline-block">
-                                                        <div>Get In Touch</div>
+                                                        <div><span data-translate="navContact">Get In Touch</span></div>
                                                         <div class="button-icon">
                                                             <div class="icon-embed-xsmall w-embed"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--ic" width="100%" height="100%" preserveAspectRatio="xMidYMid meet"
                                                                     viewBox="0 0 24 24"><path fill="currentColor" d="M16.01 11H4v2h12.01v3L20 12l-3.99-4v3z"></path></svg></div>
@@ -691,7 +700,7 @@ a,
                                                     unique furniture pieces that are both functional and attractive. Contact us today to get customised pieces that combine style and durability in a unique way!</p>
                                                 <div class="button-group margin-top margin-large absolute-button">
                                                     <a data-w-id="2a8876ce-722d-9801-6624-9feca30371ec" href="/en/contant-us" class="button is-small is-icon is-alternate w-inline-block">
-                                                        <div>Get In Touch</div>
+                                                        <div><span data-translate="navContact">Get In Touch</span></div>
                                                         <div class="button-icon">
                                                             <div class="icon-embed-xsmall w-embed"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--ic" width="100%" height="100%" preserveAspectRatio="xMidYMid meet"
                                                                     viewBox="0 0 24 24"><path fill="currentColor" d="M16.01 11H4v2h12.01v3L20 12l-3.99-4v3z"></path></svg></div>
@@ -725,7 +734,7 @@ a,
                                                     to help you realise your vision and achieve a personalised and comfortable space. Contact us today!</p>
                                                 <div class="button-group margin-top margin-large absolute-button">
                                                     <a data-w-id="2a8876ce-722d-9801-6624-9feca3037206" href="/en/contant-us" class="button is-small is-icon is-alternate w-inline-block">
-                                                        <div>Get In Touch</div>
+                                                        <div><span data-translate="navContact">Get In Touch</span></div>
                                                         <div class="button-icon">
                                                             <div class="icon-embed-xsmall w-embed"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--ic" width="100%" height="100%" preserveAspectRatio="xMidYMid meet"
                                                                     viewBox="0 0 24 24"><path fill="currentColor" d="M16.01 11H4v2h12.01v3L20 12l-3.99-4v3z"></path></svg></div>
@@ -896,7 +905,7 @@ a,
                                                 <div class="text-color-black text-size-regular font-satoshi">5</div>
                                             </div>
                                             <a data-w-id="00f3c34e-c30d-fd2d-b161-4dd5ec7c2d95" href="/en/contant-us" class="section-name-wrapper w-inline-block">
-                                                <div class="text-size-small text-colour-grey">Get in touch</div>
+                                                <div class="text-size-small text-colour-grey"><span data-translate="navContact">Get In Touch</span></div>
                                             </a>
                                         </div>
                                         <div class="margin-bottom">
@@ -906,7 +915,7 @@ a,
                                             <p data-w-id="00f3c34e-c30d-fd2d-b161-4dd5ec7c2d9c" class="text-size-medium max-width-medium margin-right margin-medium text-weight-light max-width-37rem">By working with designers who truly understand you, you can feel confident that the end result will be a reflection of your personality and style.</p>
                                             <div class="button-group">
                                                 <a data-w-id="00f3c34e-c30d-fd2d-b161-4dd5ec7c2d9f" href="/en/contant-us" class="button is-small is-icon is-alternate w-inline-block">
-                                                    <div>Get In Touch</div>
+                                                    <div><span data-translate="navContact">Get In Touch</span></div>
                                                     <div class="button-icon">
                                                         <div class="icon-embed-xsmall w-embed"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--ic" width="100%" height="100%" preserveAspectRatio="xMidYMid meet"
                                                                 viewBox="0 0 24 24"><path fill="currentColor" d="M16.01 11H4v2h12.01v3L20 12l-3.99-4v3z"></path></svg></div>
@@ -1192,6 +1201,7 @@ a,
             });
         });
     </script>
+    <script src="/pasada.design/js/hindi-translations.js"></script>
 </body>
 
 </html>

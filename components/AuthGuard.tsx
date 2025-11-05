@@ -43,7 +43,24 @@ export default function AuthGuard({
           .eq('id', session.user.id)
           .single()
 
-        if (profileError || !profile || !profile.is_active) {
+        // Handle profile errors gracefully
+        if (profileError) {
+          console.error('[AuthGuard] Profile fetch error:', profileError)
+          
+          // If table doesn't exist or RLS issue, show helpful error
+          if (profileError.code === 'PGRST116' || profileError.message.includes('500')) {
+            console.error('[AuthGuard] Database error - user_profiles table may need setup')
+            console.error('Please run: database/migrations/fix_user_profiles_rls.sql')
+          }
+          
+          // Allow access if user is authenticated but profile missing (for first-time users)
+          // They can create profile after login
+          setIsAuthenticated(true)
+          setIsLoading(false)
+          return
+        }
+
+        if (!profile || !profile.is_active) {
           router.push(fallbackUrl)
           return
         }

@@ -70,7 +70,10 @@ export default function FluidText() {
       canvas.style.transform = 'translateZ(0)';
       containerRef.current.appendChild(canvas);
 
-      const renderer = new OGL.Renderer({ dpr: 2, canvas });
+      // Use lower DPR on mobile for better performance
+      const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+      const dpr = isMobile ? 1 : Math.min(window.devicePixelRatio, 2);
+      const renderer = new OGL.Renderer({ dpr, canvas });
       const gl = renderer.gl;
 
       // Flowmap inputs
@@ -112,8 +115,10 @@ export default function FluidText() {
         const rect = containerRef.current.getBoundingClientRect();
         const w = rect.width;
         const h = rect.height;
-        canvas.width = w * 2;
-        canvas.height = h * 2;
+        const isMobile = window.innerWidth < 768;
+        const resizeDpr = isMobile ? 1 : Math.min(window.devicePixelRatio, 2);
+        canvas.width = w * resizeDpr;
+        canvas.height = h * resizeDpr;
         canvas.style.width = `${w}px`;
         canvas.style.height = `${h}px`;
 
@@ -138,7 +143,11 @@ export default function FluidText() {
 
       const updateMouse = (e: MouseEvent | TouchEvent) => {
         if (!containerRef.current) return;
-        e.preventDefault();
+        
+        // Only prevent default for touch events, not passively
+        if ('changedTouches' in e && e.cancelable) {
+          e.preventDefault();
+        }
         
         const rect = containerRef.current.getBoundingClientRect();
         let x: number | undefined, y: number | undefined;
@@ -170,12 +179,23 @@ export default function FluidText() {
         (velocity as any).needsUpdate = true;
       };
 
-      window.addEventListener('mousemove', updateMouse as any, false);
-      window.addEventListener('touchstart', updateMouse as any, false);
-      window.addEventListener('touchmove', updateMouse as any, { passive: false } as any);
+      // Use passive listeners for better performance on mobile
+      window.addEventListener('mousemove', updateMouse as any, { passive: true } as any);
+      window.addEventListener('touchstart', updateMouse as any, { passive: true } as any);
+      window.addEventListener('touchmove', updateMouse as any, { passive: true } as any);
+
+      let lastFrameTime = 0;
+      const targetFPS = 60;
+      const frameInterval = 1000 / targetFPS;
 
       const animate = (t: number) => {
         rafId = requestAnimationFrame(animate);
+        
+        // Throttle to 60fps to prevent performance warnings
+        const deltaTime = t - lastFrameTime;
+        if (deltaTime < frameInterval) return;
+        
+        lastFrameTime = t - (deltaTime % frameInterval);
         
         if (!(velocity as any).needsUpdate) {
           mouse.set(-1);
@@ -219,10 +239,12 @@ export default function FluidText() {
       {/* Canvas with inline SVG mask to clip to text shape only */}
       <div 
         ref={containerRef}
+        className="fluid-text-container"
         style={{
           position: 'relative',
-          width: '1200px',
-          height: '220px',
+          width: '100%',
+          maxWidth: '1200px',
+          height: 'clamp(120px, 25vw, 220px)',
           margin: '0 auto',
           flexShrink: 0,
           overflow: 'hidden',
